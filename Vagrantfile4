@@ -1,0 +1,21 @@
+Vagrant.configure(2) do |config|
+  config.vm.box = 'hashicorp/precise64'
+
+  (1..2).each do |i|
+    name = "ansible-test-#{i}"
+    config.vm.define name do |target|
+    end
+  end
+
+  config.vm.define "ansible-test-master" do |machine|
+    machine.vm.provision :ansible_inventory do |ansible|
+      ansible.limit = '*'
+      ansible.playbook = 'playbooks/test.yml'
+    end
+  end
+
+  config.ansible.groups = {
+    'feh' => ["ansible-test-master"],
+    'meh' => %w{ansible-test-1 ansible-test-2}
+  }
+end

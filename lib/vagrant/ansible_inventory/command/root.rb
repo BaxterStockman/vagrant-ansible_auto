@@ -2,7 +2,7 @@ require 'optparse'
 
 module VagrantPlugins
   module AnsibleInventory
-    module Commands
+    module Command
       class Root < Vagrant.plugin(2, :command)
 
         def self.synopsis

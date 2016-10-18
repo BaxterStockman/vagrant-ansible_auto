@@ -6,5 +6,5 @@ group :development do
 end
 
 group :plugins do
-  gem 'vagrant-ansible_inventory', path: '.'
+  gemspec
 end

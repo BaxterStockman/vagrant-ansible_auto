@@ -9,7 +9,7 @@ module VagrantPlugins
   module AnsibleInventory
     class Config < VagrantPlugins::Ansible::Config::Guest
       attr_accessor :inventory, :groups, :vars, :children,
-        :strict_host_key_checking, :host_wait_interval, :host_wait_max
+        :strict_host_key_checking, :host_connect_tries, :host_connect_sleep
 
       def initialize
         super
@@ -18,8 +18,8 @@ module VagrantPlugins
         @vars                     = UNSET_VALUE
         @children                 = UNSET_VALUE
         @strict_host_key_checking = UNSET_VALUE
-        @host_connect_sleep       = UNSET_VALUE
         @host_connect_tries       = UNSET_VALUE
+        @host_connect_sleep       = UNSET_VALUE
         @__errors                 = []
       end
 
@@ -29,8 +29,8 @@ module VagrantPlugins
         @inventory.vars           = @vars     unless @vars                  == UNSET_VALUE
         @inventory.children       = @children unless @children              == UNSET_VALUE
         @strict_host_key_checking = false     if @strict_host_key_checking  == UNSET_VALUE
+        @host_connect_tries       = 10        if @host_connect_tries        == UNSET_VALUE
         @host_connect_sleep       = 2         if @host_connect_sleep        == UNSET_VALUE
-        @host_connect_tries     = 5           if @host_connect_tries        == UNSET_VALUE
       rescue Errors::InventoryError => e
         @__errors << e.message
       end

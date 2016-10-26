@@ -22,7 +22,12 @@ module VagrantPlugins
             # We're dealing with the machine doing the provisining
             if name == machine.name
               other_hostvars = {:connection => 'local'}
-            elsif !other.nil?
+            elsif other.nil?
+              machine.ui.warn "Machine #{name} is not configured for this environment; omitting it from the inventory"
+            else
+              # The machines we are trying to manage might not yet be ready to
+              # connect -- retry a configurable number of times/durations until
+              # we can connect; otherwise raise an exception.
               other_ssh_info = nil
               retryable(on: Vagrant::Errors::SSHNotReady, tries: @config.host_connect_tries, sleep: @config.host_connect_sleep) do
                 other_ssh_info = other.ssh_info

@@ -84,7 +84,7 @@ module VagrantPlugins
         end
       end
 
-      def add_host(host, hostvars)
+      def add_host(host, hostvars={})
         case host
           when Host
             ;
@@ -97,7 +97,7 @@ module VagrantPlugins
         hosts.add(host)
       end
 
-      def vars_for(group, new_vars)
+      def vars_for(group, new_vars={})
         new_vars[group.to_s].tap do |group_vars|
           group_vars.merge!(new_vars)
           return group_vars

@@ -5,7 +5,7 @@ module VagrantPlugins
 
       attr_writer(*ANSIBLE_HOSTVARS)
 
-      def initialize(name, hostvars)
+      def initialize(name, hostvars={})
         @name = name
 
         # Convert keys to symbols
@@ -53,7 +53,7 @@ module VagrantPlugins
     end
 
     class HostMachine < Host
-      def initialize(machine, hostvars)
+      def initialize(machine, hostvars={})
         super(machine.name, hostvars)
         @machine = machine
         @ssh_info = machine.ssh_info || Hash.new

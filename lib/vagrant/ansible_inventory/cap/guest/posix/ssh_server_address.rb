@@ -4,7 +4,7 @@ module VagrantPlugins
   module AnsibleInventory
     module Cap
       module Guest
-        module Linux
+        module POSIX
           class SSHServerAddress
             class << self
               def ssh_server_address(machine, target_machine=nil)
@@ -23,9 +23,11 @@ module VagrantPlugins
                 return unless machine.guest.capability?(:check_open_port)
 
                 target_machine ||= machine
+                ssh_info = target_machine.ssh_info
+                default_port = ssh_info.nil? ? 22 : ssh_info[:port]
 
                 with_candidate_addresses(target_machine) do |host, port|
-                  port ||= target_machine.ssh_info[:port]
+                  port ||= default_port
 
                   if machine.guest.capability(:check_open_port, host, port)
                     yield host, port

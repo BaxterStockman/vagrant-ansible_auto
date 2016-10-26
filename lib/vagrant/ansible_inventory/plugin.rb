@@ -5,8 +5,8 @@ module VagrantPlugins
       name 'ansible inventory'
 
       config 'ansible' do
-        require_relative 'config/ansible'
-        Config::Ansible
+        require_relative 'config'
+        Config
       end
 
       command 'ansible' do
@@ -15,8 +15,8 @@ module VagrantPlugins
       end
 
       config('ansible_inventory', :provisioner) do
-        require_relative 'config/ansible'
-        Config::Ansible
+        require_relative 'config'
+        Config
       end
 
       provisioner 'ansible_inventory' do
@@ -25,18 +25,28 @@ module VagrantPlugins
       end
 
       guest_capability 'linux', :check_open_port do
-        require_relative 'cap/guest/linux/check_open_port'
-        Cap::Guest::Linux::CheckOpenPort
+        require_relative 'cap/guest/posix/check_open_port'
+        Cap::Guest::POSIX::CheckOpenPort
       end
 
       guest_capability 'linux', :gateway_addresses do
-        require_relative 'cap/guest/linux/gateway_addresses'
-        Cap::Guest::Linux::GatewayAddresses
+        require_relative 'cap/guest/posix/gateway_addresses'
+        Cap::Guest::POSIX::GatewayAddresses
       end
 
       guest_capability 'linux', :ssh_server_address do
-        require_relative 'cap/guest/linux/ssh_server_address'
-        Cap::Guest::Linux::SSHServerAddress
+        require_relative 'cap/guest/posix/ssh_server_address'
+        Cap::Guest::POSIX::SSHServerAddress
+      end
+
+      guest_capability 'linux', :executable_installed? do
+        require_relative 'cap/guest/posix/executable_installed'
+        Cap::Guest::POSIX::ExecutableInstalled
+      end
+
+      guest_capability 'linux', :bash_installed? do
+        require_relative 'cap/guest/posix/bash_installed'
+        Cap::Guest::POSIX::BashInstalled
       end
     end
   end

@@ -4,7 +4,7 @@ module VagrantPlugins
   module AnsibleInventory
     module Cap
       module Guest
-        module Linux
+        module POSIX
           class CheckOpenPort
             class << self
               def check_open_port(machine, host, port, proto='tcp')

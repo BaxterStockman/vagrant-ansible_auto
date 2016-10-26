@@ -4,7 +4,7 @@ module VagrantPlugins
   module AnsibleInventory
     module Cap
       module Guest
-        module Linux
+        module POSIX
           class GatewayAddresses
             class << self
               def gateway_addresses(machine)

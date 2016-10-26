@@ -1,11 +1,11 @@
 module VagrantPlugins
   module AnsibleInventory
     module Errors
-      class AnsibleInventoryError < Vagrant::Errors::VagrantError
+      class InventoryError < Vagrant::Errors::VagrantError
         error_namespace('vagrant.provisioners.ansible_inventory')
       end
 
-      class MissingGroupError < AnsibleInventoryError
+      class MissingGroupError < InventoryError
         error_key(:missing_group)
       end
     end

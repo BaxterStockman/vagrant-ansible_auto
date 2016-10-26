@@ -33,7 +33,7 @@ module VagrantPlugins
           case type
             when 'vars'
               entries = {} if entries.nil?
-              vars_for(group, **entries)
+              vars_for(group, entries)
             when 'children'
               entries = [] if entries.nil?
               children_of(group, *entries)
@@ -51,7 +51,7 @@ module VagrantPlugins
 
         news_hosts.each do |host, hostvars|
           hostvars = {} if hostvars.nil?
-          add_host(host, **hostvars)
+          add_host(host, hostvars)
         end
 
         hosts
@@ -61,7 +61,7 @@ module VagrantPlugins
         @vars = nil
 
         news_vars.each_pair do |group, group_vars|
-          vars_for(group, **group_vars)
+          vars_for(group, group_vars)
         end
 
         vars
@@ -84,29 +84,29 @@ module VagrantPlugins
         end
       end
 
-      def add_host(host, **hostvars)
+      def add_host(host, hostvars)
         case host
           when Host
             ;
           when String, Symbol
-            host = Host.new(host, **hostvars)
+            host = Host.new(host, hostvars)
           else
-            host = HostMachine.new(host, **hostvars)
+            host = HostMachine.new(host, hostvars)
         end
 
         hosts.add(host)
       end
 
-      def vars_for(group, **vars)
-        vars[group.to_s].tap do |group_vars|
-          group_vars.merge!(vars)
+      def vars_for(group, new_vars)
+        new_vars[group.to_s].tap do |group_vars|
+          group_vars.merge!(new_vars)
           return group_vars
         end
       end
 
-      def children_of(group, *children)
+      def children_of(group, *new_children)
         children[group.to_s].tap do |group_children|
-          group_children.merge(children.map(&:to_s))
+          group_children.merge(new_children.map(&:to_s))
           return group_children
         end
       end

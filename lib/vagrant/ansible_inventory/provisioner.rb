@@ -30,19 +30,31 @@ module VagrantPlugins
               # we can connect; otherwise raise an exception.
               other_ssh_info = nil
               retryable(on: Vagrant::Errors::SSHNotReady, tries: @config.host_connect_tries, sleep: @config.host_connect_sleep) do
+                raise Vagrant::Errors::SSHNotReady unless other.communicate.ready?
                 other_ssh_info = other.ssh_info
-                raise Vagrant::Errors::SSHNotReady if other_ssh_info.nil?
               end
 
               ssh_host, ssh_port = machine.guest.capability(:ssh_server_address, other)
               other_hostvars = {ssh_host: ssh_host, ssh_port: ssh_port}
 
-              # TODO warn about empty :private_key_path array
-              other.ssh_info.fetch(:private_key_path, []).each do |source_key|
-                remote_key_path = File.join(@config.tmp_path, 'ssh', name.to_s, provider.to_s, File.basename(source_key))
+              private_key_paths = other.ssh_info.fetch(:private_key_path, [])
+              if private_key_paths.empty?
+                machine.ui.warn "No private keys available for machine #{name}; provisioner will likely fail"
+              end
+
+              if other.config.ssh.insert_key
+                source_key_path = private_key_paths.find { |k| k != machine.env.default_private_key_path }
+              else
+                source_key_path = machine.env.default_private_key_path
+              end
+
+              if source_key_path.nil?
+                machine.ui.warn "Private key for #{name} not available for upload; provisioner will likely fail"
+              else
+                remote_key_path = File.join(@config.tmp_path, 'ssh', name.to_s, provider.to_s, File.basename(source_key_path))
                 other_hostvars[:ssh_private_key_file] = remote_key_path
                 create_and_chown_remote_folder(File.dirname(remote_key_path))
-                machine.communicate.upload(source_key, remote_key_path)
+                machine.communicate.upload(source_key_path, remote_key_path)
               end
             end
 
@@ -81,18 +93,6 @@ module VagrantPlugins
             machine.ui.warn "unable to find machine #{name} (#{e.message})"
             return nil, name, provider
           end
-        end
-      end
-
-      # TODO
-      #   - just use first key?
-      #   - check if host.ansible_private_key_path already exists on
-      #     the remote machine?
-      def create_and_chown_remote_private_key(other, private_key_file, name, provider)
-        #
-        other.ssh_info.fetch(:private_key_path, []).compact.each do |source_key|
-          create_and_chown_remote_folder(File.dirname(private_key_file))
-          machine.communicate.upload(source_key, private_key_file)
         end
       end
     end

@@ -71,6 +71,7 @@ module VagrantPlugins
         @ssh_port ||= @hostvars[:ssh_port] || @ssh_info[:port] || super
       end
 
+      # TODO better inference of which private key to use
       def ssh_private_key_file
         @ssh_private_key_file ||= @hostvars[:ssh_private_key_file] || @ssh_info.fetch(:private_key_path, []).first || super
       end

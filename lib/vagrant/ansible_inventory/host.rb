@@ -1,6 +1,11 @@
+require 'vagrant'
+require 'vagrant/ansible_inventory/util'
+
 module VagrantPlugins
   module AnsibleInventory
     class Host
+      include VagrantPlugins::AnsibleInventory::Util
+
       ANSIBLE_HOSTVARS = [:ssh_user, :ssh_host, :ssh_port, :ssh_private_key_file, :connection]
 
       attr_writer(*ANSIBLE_HOSTVARS)
@@ -73,7 +78,7 @@ module VagrantPlugins
 
       # TODO better inference of which private key to use
       def ssh_private_key_file
-        @ssh_private_key_file ||= @hostvars[:ssh_private_key_file] || @ssh_info.fetch(:private_key_path, []).first || super
+        @ssh_private_key_file ||= @hostvars[:ssh_private_key_file] || fetch_private_key(@machine)
       end
     end
   end

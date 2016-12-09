@@ -1,10 +1,12 @@
 require 'vagrant'
 require Vagrant.source_root + 'plugins/provisioners/ansible/provisioner/guest'
+require 'vagrant/ansible_inventory/util'
 
 module VagrantPlugins
   module AnsibleInventory
     class Provisioner < VagrantPlugins::Ansible::Provisioner::Guest
       include Vagrant::Util::Retryable
+      include VagrantPlugins::AnsibleInventory::Util
 
       def configure(root_config)
         super
@@ -28,30 +30,32 @@ module VagrantPlugins
               # The machines we are trying to manage might not yet be ready to
               # connect -- retry a configurable number of times/durations until
               # we can connect; otherwise raise an exception.
-              other_ssh_info = nil
+              private_key_paths = []
               retryable(on: Vagrant::Errors::SSHNotReady, tries: @config.host_connect_tries, sleep: @config.host_connect_sleep) do
-                raise Vagrant::Errors::SSHNotReady unless other.communicate.ready?
-                other_ssh_info = other.ssh_info
+                raise Vagrant::Errors::SSHNotReady unless other.communicate.ready? and !other.ssh_info.nil?
+
+                private_key_paths = other.ssh_info.fetch(:private_key_path, [])
+                raise Vagrant::Errors::SSHNotReady if private_key_paths.empty?
+
+                if other.config.ssh.insert_key
+                  raise Vagrant::Errors::SSHNotReady unless private_key_paths.any? { |k| !insecure_key?(k) }
+                end
               end
 
               ssh_host, ssh_port = machine.guest.capability(:ssh_server_address, other)
               other_hostvars = {ssh_host: ssh_host, ssh_port: ssh_port}
 
-              private_key_paths = other.ssh_info.fetch(:private_key_path, [])
               if private_key_paths.empty?
                 machine.ui.warn "No private keys available for machine #{name}; provisioner will likely fail"
               end
 
-              if other.config.ssh.insert_key
-                source_key_path = private_key_paths.find { |k| k != machine.env.default_private_key_path }
-              else
-                source_key_path = machine.env.default_private_key_path
-              end
+              source_key_path = fetch_private_key(other)
 
               if source_key_path.nil?
                 machine.ui.warn "Private key for #{name} not available for upload; provisioner will likely fail"
               else
                 remote_key_path = File.join(@config.tmp_path, 'ssh', name.to_s, provider.to_s, File.basename(source_key_path))
+                machine.ui.info "Adding #{name} to Ansible inventory"
                 other_hostvars[:ssh_private_key_file] = remote_key_path
                 create_and_chown_remote_folder(File.dirname(remote_key_path))
                 machine.communicate.upload(source_key_path, remote_key_path)

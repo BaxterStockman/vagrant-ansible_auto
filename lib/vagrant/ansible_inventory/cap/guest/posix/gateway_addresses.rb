@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require 'set'
 
 module VagrantPlugins
@@ -17,7 +18,7 @@ module VagrantPlugins
                 return enum_for(__method__, machine) unless block_given?
 
                 seen_addresses = Set.new
-                yield_unseen_address = ->(a) do
+                yield_unseen_address = lambda do |a|
                   yield a unless seen_addresses.include? a
                   seen_addresses << a
                 end

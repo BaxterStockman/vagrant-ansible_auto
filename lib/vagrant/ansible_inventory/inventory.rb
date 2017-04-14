@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require 'set'
 require 'json'
 require 'vagrant/ansible_inventory/host'
@@ -16,7 +17,7 @@ module VagrantPlugins
       end
 
       def vars
-        @vars = Hash.new { |hash, key| hash[key] = Hash.new } if unset?(@vars)
+        @vars = Hash.new { |hash, key| hash[key] = {} } if unset?(@vars)
         @vars
       end
 
@@ -31,10 +32,10 @@ module VagrantPlugins
         new_groups.each do |group_heading, entries|
           group, type = group_heading.to_s.split(':')
           case type
-            when 'vars'
+          when 'vars'
               entries = {} if entries.nil?
               vars_for(group, entries)
-            when 'children'
+          when 'children'
               entries = [] if entries.nil?
               children_of(group, *entries)
             else
@@ -46,7 +47,7 @@ module VagrantPlugins
         groups
       end
 
-      def hosts=(new_hosts)
+      def hosts=(_new_hosts)
         @hosts = nil
 
         news_hosts.each do |host, hostvars|
@@ -57,7 +58,7 @@ module VagrantPlugins
         hosts
       end
 
-      def vars=(new_vars)
+      def vars=(_new_vars)
         @vars = nil
 
         news_vars.each_pair do |group, group_vars|
@@ -84,20 +85,18 @@ module VagrantPlugins
         end
       end
 
-      def add_host(host, hostvars={})
-        case host
-          when Host
-            ;
-          when String, Symbol
-            host = Host.new(host, hostvars)
-          else
-            host = HostMachine.new(host, hostvars)
-        end
-
-        hosts.add(host)
+      def add_host(host, hostvars = {})
+        hosts.add case host
+                  when Host
+                    host
+                  when String, Symbol
+                    Host.new(host, hostvars)
+                  else
+                    HostMachine.new(host, hostvars)
+                  end
       end
 
-      def vars_for(group, new_vars={})
+      def vars_for(group, new_vars = {})
         new_vars[group.to_s].tap do |group_vars|
           group_vars.merge!(new_vars)
           return group_vars
@@ -112,15 +111,15 @@ module VagrantPlugins
       end
 
       def merge!(other)
-        @groups = groups.merge(other.groups) do |group, group_members, other_group_members|
+        @groups = groups.merge(other.groups) do |_group, group_members, other_group_members|
           group_members.merge(other_group_members)
         end
 
-        @vars = vars.merge(other.vars) do |group, group_vars, other_group_vars|
+        @vars = vars.merge(other.vars) do |_group, group_vars, other_group_vars|
           group_vars.merge(other_group_vars)
         end
 
-        @children = children.merge(other.children) do |group, group_children, other_group_children|
+        @children = children.merge(other.children) do |_group, group_children, other_group_children|
           group_children.merge(other_group_children)
         end
 
@@ -136,7 +135,7 @@ module VagrantPlugins
       end
 
       def to_h
-        Hash.new.tap do |h|
+        {}.tap do |h|
           h.merge!(Hash[groups.map { |group, members| [group, members.to_a] }])
           h['_'] = hosts.map(&:to_h)
           h.merge!(Hash[vars.map { |group, group_vars| ["#{group}:vars", group_vars] }])
@@ -174,7 +173,7 @@ module VagrantPlugins
         to_h.tap { |h| h.delete('_') }.each do |group, entries|
           yield "[#{group}]"
 
-          (entries.kind_of?(Hash) ? entries.map { |entry, value| "#{entry}=#{value}" } : entries).each do |entry|
+          (entries.is_a?(Hash) ? entries.map { |entry, value| "#{entry}=#{value}" } : entries).each do |entry|
             yield entry
           end
         end

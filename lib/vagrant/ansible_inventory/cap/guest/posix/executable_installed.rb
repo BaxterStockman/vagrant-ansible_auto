@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require 'shellwords'
 
 module VagrantPlugins
@@ -8,7 +9,7 @@ module VagrantPlugins
           class ExecutableInstalled
             class << self
               def executable_installed?(machine, executable)
-                machine.communicate.test(%Q[test -x "$(command -v #{executable.shellescape})"], error_check: false)
+                machine.communicate.test(%[test -x "$(command -v #{executable.shellescape})"], error_check: false)
               end
             end
           end

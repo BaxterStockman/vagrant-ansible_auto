@@ -1,10 +1,10 @@
+# frozen_string_literal: true
 require 'optparse'
 
 module VagrantPlugins
   module AnsibleInventory
     module Command
       class Root < Vagrant.plugin(2, :command)
-
         def self.synopsis
           'build ansible inventory'
         end
@@ -41,7 +41,7 @@ module VagrantPlugins
             o.separator 'Available subcommands:'
 
             keys = []
-            @subcommands.each { |key, value| keys << key.to_s }
+            @subcommands.each { |key, _value| keys << key.to_s }
 
             keys.sort.each do |key|
               o.separator "     #{key}"
@@ -53,7 +53,6 @@ module VagrantPlugins
 
           @env.ui.info(opts.help, prefix: false)
         end
-
       end
     end
   end

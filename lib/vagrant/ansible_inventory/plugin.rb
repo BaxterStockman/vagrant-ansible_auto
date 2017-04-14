@@ -1,7 +1,7 @@
+# frozen_string_literal: true
 module VagrantPlugins
   module AnsibleInventory
     class Plugin < Vagrant.plugin(2)
-
       name 'ansible inventory'
 
       config 'ansible' do

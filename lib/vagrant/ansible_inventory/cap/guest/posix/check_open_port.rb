@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require 'uri'
 
 module VagrantPlugins
@@ -7,7 +8,7 @@ module VagrantPlugins
         module POSIX
           class CheckOpenPort
             class << self
-              def check_open_port(machine, host, port, proto='tcp')
+              def check_open_port(machine, host, port, proto = 'tcp')
                 return nil unless machine.communicate.test('bash')
 
                 # Check that we got a valid URI by constructing a URI object
@@ -22,7 +23,7 @@ module VagrantPlugins
                 end
 
                 target = File.join('/dev/', proto, uri.host, uri.port.to_s).shellescape
-                machine.communicate.test("read < #{target}", {shell: '/bin/bash'})
+                machine.communicate.test("read < #{target}", shell: '/bin/bash')
               end
             end
           end

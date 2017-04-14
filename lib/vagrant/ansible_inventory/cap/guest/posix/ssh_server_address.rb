@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require 'set'
 
 module VagrantPlugins
@@ -7,17 +8,17 @@ module VagrantPlugins
         module POSIX
           class SSHServerAddress
             class << self
-              def ssh_server_address(machine, target_machine=nil)
+              def ssh_server_address(machine, target_machine = nil)
                 with_open_ports(machine, target_machine).first
               end
 
             private
 
-              def ssh_server_addresses(machine, target_machine=nil)
+              def ssh_server_addresses(machine, target_machine = nil)
                 with_open_ports(machine, target_machine).to_a
               end
 
-              def with_open_ports(machine, target_machine=nil)
+              def with_open_ports(machine, target_machine = nil)
                 return enum_for(__method__, machine, target_machine) unless block_given?
 
                 return unless machine.guest.capability?(:check_open_port)
@@ -44,7 +45,7 @@ module VagrantPlugins
                 return enum_for(__method__, machine) unless block_given?
 
                 seen_candidates = Set.new
-                yield_unseen_candidate = ->(host_and_port) do
+                yield_unseen_candidate = lambda do |host_and_port|
                   yield(*host_and_port) unless seen_candidates.include?(host_and_port)
                   seen_candidates << host_and_port
                 end
@@ -58,28 +59,24 @@ module VagrantPlugins
                 end
 
                 has_routable_ip = false
-                machine.config.vm.networks.sort_by do |(type, _)|
-                  network_type_precedence(type)
-                end.each do |(type, info)|
+                machine.config.vm.networks.sort_by { |(type, _)| network_type_precedence(type) }.each do |type, info|
                   case type
-                    when :private_network, :public_network
+                  when :private_network, :public_network
                       has_routable_ip = true
 
-                      if info.key?(:ip)
-                        yield_unseen_candidate.call([info[:ip]])
-                      end
-                    when :forwarded_port
-                      # TODO the `:id' restriction might not be right.
+                      yield_unseen_candidate.call([info[:ip]]) if info.key?(:ip)
+                  when :forwarded_port
+                      # TODO: the `:id' restriction might not be right.
                       if info[:protocol] == 'tcp' and info[:id] == 'ssh'
                         yield_unseen_candidate.call([info[:host_ip], info[:host]])
                       end
                   end
                 end
 
-                if !has_routable_ip and machine.guest.capability?(:gateway_addresses)
-                  machine.guest.capability(:gateway_addresses).each do |gateway_address|
-                    yield_unseen_candidate.call(gateway_address)
-                  end
+                return if has_routable_ip or !machine.guest.capability?(:gateway_addresses)
+
+                machine.guest.capability(:gateway_addresses).each do |gateway_address|
+                  yield_unseen_candidate.call(gateway_address)
                 end
               end
             end

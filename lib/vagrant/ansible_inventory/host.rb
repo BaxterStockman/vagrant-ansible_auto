@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require 'vagrant'
 require 'vagrant/ansible_inventory/util'
 
@@ -6,11 +7,11 @@ module VagrantPlugins
     class Host
       include VagrantPlugins::AnsibleInventory::Util
 
-      ANSIBLE_HOSTVARS = [:ssh_user, :ssh_host, :ssh_port, :ssh_private_key_file, :connection]
+      ANSIBLE_HOSTVARS = [:ssh_user, :ssh_host, :ssh_port, :ssh_private_key_file, :connection].freeze
 
       attr_writer(*ANSIBLE_HOSTVARS)
 
-      def initialize(name, hostvars={})
+      def initialize(name, hostvars = {})
         @name = name
 
         # Convert keys to symbols
@@ -49,19 +50,19 @@ module VagrantPlugins
       end
 
       def to_h
-        {name => hostvars}
+        { name => hostvars }
       end
 
       def to_ini
-        [name, *hostvars.reject {|_, value| value.nil? }.map { |key, value| "#{key}=#{value}" }].join(' ')
+        [name, *hostvars.reject { |_, value| value.nil? }.map { |key, value| "#{key}=#{value}" }].join(' ')
       end
     end
 
     class HostMachine < Host
-      def initialize(machine, hostvars={})
+      def initialize(machine, hostvars = {})
         super(machine.name, hostvars)
         @machine = machine
-        @ssh_info = machine.ssh_info || Hash.new
+        @ssh_info = machine.ssh_info || {}
       end
 
       def ssh_user
@@ -76,7 +77,7 @@ module VagrantPlugins
         @ssh_port ||= @hostvars[:ssh_port] || @ssh_info[:port] || super
       end
 
-      # TODO better inference of which private key to use
+      # TODO: better inference of which private key to use
       def ssh_private_key_file
         @ssh_private_key_file ||= @hostvars[:ssh_private_key_file] || fetch_private_key(@machine)
       end

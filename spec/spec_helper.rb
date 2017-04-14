@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 unless RUBY_ENGINE == 'rbx' # coverage support is broken on rbx
   require 'simplecov'
   require 'coveralls'
@@ -13,7 +14,7 @@ end
 
 require 'pathname'
 
-$LOAD_PATH.unshift (Pathname.new(__FILE__).parent.parent + 'lib').to_s
+$LOAD_PATH.unshift((Pathname.new(__FILE__).parent.parent + 'lib').to_s)
 
 require 'vagrant/ansible_inventory'
 
@@ -48,12 +49,12 @@ RSpec::Matchers.define :all do |expected|
   end
 
   def failure_message(actual)
-    unless actual.respond_to?(:each_with_index)
-      "provided object is not iterable"
-    else
-      @failed_items.each_with_index.reject { |f, i| f.nil? }.map do |f, i|
+    if actual.respond_to?(:each_with_index)
+      @failed_items.each_with_index.reject { |f, _i| f.nil? }.map do |f, i|
         "object at index #{i} failed to match: #{f}"
       end.join("\n")
+    else
+      "provided object is not iterable"
     end
   end
 

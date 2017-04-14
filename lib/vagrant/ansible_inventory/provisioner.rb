@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require 'vagrant'
 require Vagrant.source_root + 'plugins/provisioners/ansible/provisioner/guest'
 require 'vagrant/ansible_inventory/util'
@@ -16,14 +17,14 @@ module VagrantPlugins
       def provision
         @config = @__ansible_config.merge(config)
 
-        # TODO figure out how to access ansible_inventory configuration done
+        # TODO: figure out how to access ansible_inventory configuration done
         # on the `other' machine.
-        #@config = other.config.ansible.merge(merged_config)
+        # @config = other.config.ansible.merge(merged_config)
         if machine.guest.capability?(:ssh_server_address)
           with_active_machines do |other, name, provider|
             # We're dealing with the machine doing the provisining
             if name == machine.name
-              other_hostvars = {:connection => 'local'}
+              other_hostvars = { connection: 'local' }
             elsif other.nil?
               machine.ui.warn "Machine #{name} is not configured for this environment; omitting it from the inventory"
             else
@@ -43,7 +44,7 @@ module VagrantPlugins
               end
 
               ssh_host, ssh_port = machine.guest.capability(:ssh_server_address, other)
-              other_hostvars = {ssh_host: ssh_host, ssh_port: ssh_port}
+              other_hostvars = { ssh_host: ssh_host, ssh_port: ssh_port }
 
               if private_key_paths.empty?
                 machine.ui.warn "No private keys available for machine #{name}; provisioner will likely fail"
@@ -62,7 +63,7 @@ module VagrantPlugins
               end
             end
 
-            @config.inventory.add_host(other, other_hostvars || Hash.new)
+            @config.inventory.add_host(other, other_hostvars || {})
           end
         end
 

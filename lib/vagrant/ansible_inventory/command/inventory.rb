@@ -1,10 +1,10 @@
+# frozen_string_literal: true
 require 'optparse'
 
 module VagrantPlugins
   module AnsibleInventory
     module Command
       class Inventory < Vagrant.plugin(2, :command)
-
         def self.synopsis
           'dynamic ansible inventory'
         end
@@ -15,7 +15,7 @@ module VagrantPlugins
             op.separator ''
             op.separator 'Available options:'
 
-            op.on('-l', '--list', 'List all hosts as json') do |target|
+            op.on('-l', '--list', 'List all hosts as json') do |_target|
               @env.ui.info inventory.to_json, prefix: false
               return 0
             end
@@ -30,13 +30,13 @@ module VagrantPlugins
 
           @env.ui.info inventory.to_ini, prefix: false
 
-          return 0
+          0
         end
 
       private
 
         def inventory
-          @inventory = with_target_vms(@argv){}.each_with_object(AnsibleInventory::Inventory.new) do |machine, inventory|
+          @inventory = with_target_vms(@argv) {}.each_with_object(AnsibleInventory::Inventory.new) do |machine, inventory|
             unless machine.state.id == :running
               @env.ui.warn "machine #{machine.name} is not running; falling back to default hostvar values"
             end

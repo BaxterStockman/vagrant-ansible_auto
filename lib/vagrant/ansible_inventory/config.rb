@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require 'vagrant/ansible_inventory/inventory'
 require 'vagrant/ansible_inventory/errors'
 require 'vagrant/util/deep_merge'
@@ -9,7 +10,7 @@ module VagrantPlugins
   module AnsibleInventory
     class Config < VagrantPlugins::Ansible::Config::Guest
       attr_accessor :inventory, :groups, :vars, :children,
-        :strict_host_key_checking, :host_connect_tries, :host_connect_sleep
+                    :strict_host_key_checking, :host_connect_tries, :host_connect_sleep
 
       def initialize
         super
@@ -40,12 +41,12 @@ module VagrantPlugins
 
         errors = _detected_errors + @__errors
 
-        # TODO -- test that `host_wait...' values are integers
+        # TODO: -- test that `host_wait...' values are integers
         unless @strict_host_key_checking == true or @strict_host_key_checking == false
           errors << "strict_host_key_checking must be either true or false"
         end
 
-        {'ansible_inventory' => errors}
+        { 'ansible_inventory' => errors }
       end
 
       def merge(other)
@@ -63,11 +64,11 @@ module VagrantPlugins
 
       def conditional_merge(a, b)
         if b.nil? or b == UNSET_VALUE
-          return a
+          a
         elsif a.nil? or a == UNSET_VALUE
-          return b
+          b
         else
-          return Vagrant::Util::DeepMerge.deep_merge(a, b)
+          Vagrant::Util::DeepMerge.deep_merge(a, b)
         end
       end
     end

@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require 'spec_helper'
 
 require 'vagrant/ansible_inventory/inventory'
@@ -5,23 +6,23 @@ require 'vagrant/ansible_inventory/inventory'
 describe VagrantPlugins::AnsibleInventory::Inventory do
   subject { described_class.new }
 
-  #include_context 'machine'
+  # include_context 'machine'
 
   describe '#add_group' do
     it 'adds a list of hosts to the group cache' do
-      subject.add_group(:mygroup, *%w{db bastion firewall})
+      subject.add_group(:mygroup, 'db', 'bastion', 'firewall')
       subject.groups.tap do |groups|
         expect(groups).to have_key("mygroup")
-        expect(groups["mygroup"]).to include(*%w{db bastion firewall})
+        expect(groups["mygroup"]).to include('db', 'bastion', 'firewall')
       end
     end
 
     it 'appends new hosts to existing groups' do
-      subject.add_group(:mygroup, *%w{db bastion firewall})
+      subject.add_group(:mygroup, 'db', 'bastion', 'firewall')
       subject.add_group(:mygroup, 'repo')
       subject.groups.tap do |groups|
         expect(groups).to have_key("mygroup")
-        expect(groups["mygroup"]).to include(*%w{db bastion firewall repo})
+        expect(groups["mygroup"]).to include('db', 'bastion', 'firewall', 'repo')
       end
     end
   end
@@ -45,7 +46,7 @@ describe VagrantPlugins::AnsibleInventory::Inventory do
     end
 
     it 'coerces names + hostvars to instances of Host' do
-      subject.add_host("mymachine", :ansible_ssh_host => 'foo.bar.net')
+      subject.add_host("mymachine", ansible_ssh_host: 'foo.bar.net')
     end
   end
 

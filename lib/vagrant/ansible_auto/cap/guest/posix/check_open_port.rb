@@ -2,7 +2,7 @@
 require 'uri'
 
 module VagrantPlugins
-  module AnsibleInventory
+  module AnsibleAuto
     module Cap
       module Guest
         module POSIX

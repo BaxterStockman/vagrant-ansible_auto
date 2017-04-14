@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 require 'spec_helper'
 
-require 'vagrant/ansible_inventory/inventory'
+require 'vagrant/ansible_auto/inventory'
 
-describe VagrantPlugins::AnsibleInventory::Inventory do
+describe VagrantPlugins::AnsibleAuto::Inventory do
   subject { described_class.new }
 
   # include_context 'machine'
@@ -42,7 +42,7 @@ describe VagrantPlugins::AnsibleInventory::Inventory do
 
     it 'coerces instances of Vagrant::Machine to instances of Host' do
       subject.add_host(machine)
-      expect(subject.hosts).to all(be_a(VagrantPlugins::AnsibleInventory::Host))
+      expect(subject.hosts).to all(be_a(VagrantPlugins::AnsibleAuto::Host))
     end
 
     it 'coerces names + hostvars to instances of Host' do

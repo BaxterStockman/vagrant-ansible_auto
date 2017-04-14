@@ -5,3 +5,4 @@
   possible.
 - Util::ScopedHashOverride for the key conversions done in Host?
 - Util::HashWithIndifferentAccess for Host?
+- default vaues for arguments to attr_writer methods in `Inventory`

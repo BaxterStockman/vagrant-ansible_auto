@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 module VagrantPlugins
-  module AnsibleInventory
+  module AnsibleAuto
     module Util
       # Adapted from VagrantPlugins::CommunicatorSSH::Communicator#insecure_key?.
       # This will test whether +path+ is the Vagrant insecure private key.
@@ -13,7 +13,7 @@ module VagrantPlugins
       end
 
       def fetch_private_key(machine)
-        if machine.config.ssh.insert_key
+        if machine.config.ssh.insert_key && !machine.ssh_info.nil?
           machine.ssh_info.fetch(:private_key_path, []).find { |k| !insecure_key?(k) }
         else
           machine.env.default_private_key_path

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 module VagrantPlugins
-  module AnsibleInventory
+  module AnsibleAuto
     module Cap
       module Guest
         module POSIX

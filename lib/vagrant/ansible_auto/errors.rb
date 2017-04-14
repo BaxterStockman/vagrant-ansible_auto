@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 module VagrantPlugins
-  module AnsibleInventory
+  module AnsibleAuto
     module Errors
       class InventoryError < Vagrant::Errors::VagrantError
-        error_namespace('vagrant.provisioners.ansible_inventory')
+        error_namespace('vagrant.provisioners.ansible_auto')
       end
 
       class MissingGroupError < InventoryError

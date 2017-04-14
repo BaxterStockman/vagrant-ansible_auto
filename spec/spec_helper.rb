@@ -16,7 +16,7 @@ require 'pathname'
 
 $LOAD_PATH.unshift((Pathname.new(__FILE__).parent.parent + 'lib').to_s)
 
-require 'vagrant/ansible_inventory'
+require 'vagrant/ansible_auto'
 
 # We're using an older version of rspec-expectations that doesn't have the
 # `all' matcher.
@@ -77,17 +77,17 @@ shared_context 'machine' do
 end
 
 shared_context 'host' do
-  require 'vagrant/ansible_inventory/host'
+  require 'vagrant/ansible_auto/host'
 
   include_context 'machine'
 
-  let(:host) { VagrantPlugins::AnsibleInventory::Host.new(machine) }
+  let(:host) { VagrantPlugins::AnsibleAuto::Host.new(machine) }
 end
 
 shared_context 'inventory' do
-  require 'vagrant/ansible_inventory/host'
+  require 'vagrant/ansible_auto/host'
 
   include_context 'machine'
 
-  let(:inventory) { VagrantPlugins::AnsibleInventory.new }
+  let(:inventory) { VagrantPlugins::AnsibleAuto.new }
 end

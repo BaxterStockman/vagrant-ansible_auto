@@ -1,4 +1,5 @@
 Copyright (c) 2014-2015 Ignacio Galindo
+Copyright (c) 2016-2017 Matt Schreiber
 
 MIT License
 

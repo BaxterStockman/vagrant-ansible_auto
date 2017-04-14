@@ -1,16 +1,16 @@
 # frozen_string_literal: true
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'vagrant/ansible_inventory/version'
+require 'vagrant/ansible_auto/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = 'vagrant-ansible_inventory'
-  spec.version       = VagrantPlugins::AnsibleInventory::VERSION
+  spec.name          = 'vagrant-ansible_auto'
+  spec.version       = VagrantPlugins::AnsibleAuto::VERSION
   spec.authors       = ['Ignacio Galindo']
   spec.email         = ['joiggama@gmail.com']
   spec.summary       = 'Vagrant plugin for building ansible inventory files.'
   spec.description   = 'Helps defining and building ansible inventory files programatically via configuration and command modules.'
-  spec.homepage      = 'https://github.com/joiggama/vagrant-ansible_inventory'
+  spec.homepage      = 'https://github.com/joiggama/vagrant-ansible_auto'
   spec.license       = 'MIT'
 
   spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
@@ -22,7 +22,7 @@ Gem::Specification.new do |spec|
   spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }
   spec.require_paths = ['lib']
 
-  spec.add_development_dependency 'bundler',  '~> 1.7'
+  spec.add_development_dependency 'bundler',  '~> 1.12.5'
   spec.add_development_dependency 'rake',     '~> 10.0'
   spec.add_development_dependency 'rspec',    '~> 2.14.0'
   spec.add_development_dependency 'simplecov'

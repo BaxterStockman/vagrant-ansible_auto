@@ -2,7 +2,7 @@
 require 'optparse'
 
 module VagrantPlugins
-  module AnsibleInventory
+  module AnsibleAuto
     module Command
       class Inventory < Vagrant.plugin(2, :command)
         def self.synopsis
@@ -36,7 +36,7 @@ module VagrantPlugins
       private
 
         def inventory
-          @inventory = with_target_vms(@argv) {}.each_with_object(AnsibleInventory::Inventory.new) do |machine, inventory|
+          @inventory = with_target_vms(@argv) {}.each_with_object(AnsibleAuto::Inventory.new) do |machine, inventory|
             unless machine.state.id == :running
               @env.ui.warn "machine #{machine.name} is not running; falling back to default hostvar values"
             end

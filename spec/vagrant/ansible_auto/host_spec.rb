@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 require 'spec_helper'
 
-require 'vagrant/ansible_inventory/host'
+require 'vagrant/ansible_auto/host'
 
-describe VagrantPlugins::AnsibleInventory::HostMachine do
+describe VagrantPlugins::AnsibleAuto::HostMachine do
   include_context 'machine'
 
   subject { described_class.new(machine) }

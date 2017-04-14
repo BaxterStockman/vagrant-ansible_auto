@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 require 'set'
 require 'json'
-require 'vagrant/ansible_inventory/host'
+require 'vagrant/ansible_auto/host'
 
 module VagrantPlugins
-  module AnsibleInventory
+  module AnsibleAuto
     class Inventory
       def groups
         @groups = Hash.new { |hash, key| hash[key] = Set.new } if unset?(@groups)
@@ -58,10 +58,10 @@ module VagrantPlugins
         hosts
       end
 
-      def vars=(_new_vars)
+      def vars=(new_vars)
         @vars = nil
 
-        news_vars.each_pair do |group, group_vars|
+        new_vars.each_pair do |group, group_vars|
           vars_for(group, group_vars)
         end
 
@@ -97,7 +97,7 @@ module VagrantPlugins
       end
 
       def vars_for(group, new_vars = {})
-        new_vars[group.to_s].tap do |group_vars|
+        vars[group.to_s].tap do |group_vars|
           group_vars.merge!(new_vars)
           return group_vars
         end
@@ -135,6 +135,7 @@ module VagrantPlugins
       end
 
       def to_h
+        $stderr.puts vars.inspect
         {}.tap do |h|
           h.merge!(Hash[groups.map { |group, members| [group, members.to_a] }])
           h['_'] = hosts.map(&:to_h)

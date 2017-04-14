@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 module VagrantPlugins
-  module AnsibleInventory
+  module AnsibleAuto
     class Plugin < Vagrant.plugin(2)
       name 'ansible inventory'
 
@@ -14,6 +14,17 @@ module VagrantPlugins
         Command::Root
       end
 
+      config('ansible_auto', :provisioner) do
+        require_relative 'config'
+        Config
+      end
+
+      provisioner 'ansible_auto' do
+        require_relative 'provisioner'
+        Provisioner
+      end
+
+      # Compatibility with Vagrantfiles from before name change to ansible_auto
       config('ansible_inventory', :provisioner) do
         require_relative 'config'
         Config

@@ -1,16 +1,18 @@
 # frozen_string_literal: true
-require 'vagrant/ansible_inventory/inventory'
-require 'vagrant/ansible_inventory/errors'
+require 'vagrant/ansible_auto/inventory'
+require 'vagrant/ansible_auto/errors'
 require 'vagrant/util/deep_merge'
 
 require 'vagrant'
 require Vagrant.source_root + 'plugins/provisioners/ansible/config/guest'
 
 module VagrantPlugins
-  module AnsibleInventory
+  module AnsibleAuto
     class Config < VagrantPlugins::Ansible::Config::Guest
       attr_accessor :inventory, :groups, :vars, :children,
                     :strict_host_key_checking, :host_connect_tries, :host_connect_sleep
+
+      protected(:inventory=)
 
       def initialize
         super
@@ -46,7 +48,7 @@ module VagrantPlugins
           errors << "strict_host_key_checking must be either true or false"
         end
 
-        { 'ansible_inventory' => errors }
+        { 'ansible_auto' => errors }
       end
 
       def merge(other)

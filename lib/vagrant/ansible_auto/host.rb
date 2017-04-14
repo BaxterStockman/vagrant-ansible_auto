@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 require 'vagrant'
-require 'vagrant/ansible_inventory/util'
+require 'vagrant/ansible_auto/util'
 
 module VagrantPlugins
-  module AnsibleInventory
+  module AnsibleAuto
     class Host
-      include VagrantPlugins::AnsibleInventory::Util
+      include VagrantPlugins::AnsibleAuto::Util
 
       ANSIBLE_HOSTVARS = [:ssh_user, :ssh_host, :ssh_port, :ssh_private_key_file, :connection].freeze
 

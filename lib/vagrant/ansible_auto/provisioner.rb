@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 require 'vagrant'
 require Vagrant.source_root + 'plugins/provisioners/ansible/provisioner/guest'
-require 'vagrant/ansible_inventory/util'
+require 'vagrant/ansible_auto/util'
 
 module VagrantPlugins
-  module AnsibleInventory
+  module AnsibleAuto
     class Provisioner < VagrantPlugins::Ansible::Provisioner::Guest
       include Vagrant::Util::Retryable
-      include VagrantPlugins::AnsibleInventory::Util
+      include VagrantPlugins::AnsibleAuto::Util
 
       def configure(root_config)
         super
@@ -17,7 +17,7 @@ module VagrantPlugins
       def provision
         @config = @__ansible_config.merge(config)
 
-        # TODO: figure out how to access ansible_inventory configuration done
+        # TODO: figure out how to access ansible_auto configuration done
         # on the `other' machine.
         # @config = other.config.ansible.merge(merged_config)
         if machine.guest.capability?(:ssh_server_address)

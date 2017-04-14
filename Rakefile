@@ -1,6 +1,11 @@
 require "bundler/gem_tasks"
+
 require "rspec/core/rake_task"
+RSpec::Core::RakeTask.new(:spec) do |t|
+  t.ruby_opts = "-w"
+end
 
-RSpec::Core::RakeTask.new(:spec)
+require "rubocop/rake_task"
+RuboCop::RakeTask.new
 
-task :default => :spec
+task default: [:rubocop, :spec]

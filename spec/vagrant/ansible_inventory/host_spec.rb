@@ -3,9 +3,9 @@ require 'spec_helper'
 require 'vagrant/ansible_inventory/host'
 
 describe VagrantPlugins::AnsibleInventory::HostMachine do
-  subject { described_class.new(machine) }
-
   include_context 'machine'
+
+  subject { described_class.new(machine) }
 
   describe '#ssh_user' do
     it 'corresponds to machine.ssh_info[:username]' do

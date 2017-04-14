@@ -1,0 +1,6 @@
+inherit_from:
+  - https://gist.githubusercontent.com/infertux/cdd2ccc6e0a0cd94f458/raw
+
+Style/SpecialGlobalVars:
+  Enabled: false
+

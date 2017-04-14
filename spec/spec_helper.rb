@@ -1,3 +1,16 @@
+unless RUBY_ENGINE == 'rbx' # coverage support is broken on rbx
+  require 'simplecov'
+  require 'coveralls'
+
+  formatters = [SimpleCov::Formatter::HTMLFormatter, Coveralls::SimpleCov::Formatter]
+  SimpleCov.formatter = SimpleCov::Formatter::MultiFormatter.new(formatters)
+  SimpleCov.start do
+    minimum_coverage 100
+    add_group 'Sources', 'lib'
+    add_group 'Tests', 'spec'
+  end
+end
+
 require 'pathname'
 
 $LOAD_PATH.unshift (Pathname.new(__FILE__).parent.parent + 'lib').to_s

@@ -7,8 +7,8 @@ Gem::Specification.new do |spec|
   spec.version       = VagrantPlugins::AnsibleInventory::VERSION
   spec.authors       = ['Ignacio Galindo']
   spec.email         = ['joiggama@gmail.com']
-  spec.summary       = %q{Vagrant plugin for building ansible inventory files.}
-  spec.description   = %q{Helps defining and building ansible inventory files programatically via configuration and command modules.}
+  spec.summary       = 'Vagrant plugin for building ansible inventory files.'
+  spec.description   = 'Helps defining and building ansible inventory files programatically via configuration and command modules.'
   spec.homepage      = 'https://github.com/joiggama/vagrant-ansible_inventory'
   spec.license       = 'MIT'
 
@@ -21,7 +21,11 @@ Gem::Specification.new do |spec|
   spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }
   spec.require_paths = ['lib']
 
-  spec.add_development_dependency 'bundler', '~> 1.7'
-  spec.add_development_dependency 'rake',    '~> 10.0'
-  spec.add_development_dependency 'rspec',   '~> 2.14.0'
+  spec.add_development_dependency 'bundler',  '~> 1.7'
+  spec.add_development_dependency 'rake',     '~> 10.0'
+  spec.add_development_dependency 'rspec',    '~> 2.14.0'
+  spec.add_development_dependency 'simplecov'
+  spec.add_development_dependency 'rubocop'
+  spec.add_development_dependency 'cane'
+  spec.add_development_dependency 'coveralls'
 end

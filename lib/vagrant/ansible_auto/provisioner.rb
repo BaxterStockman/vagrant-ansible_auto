@@ -2,6 +2,7 @@
 require 'vagrant'
 require Vagrant.source_root + 'plugins/provisioners/ansible/provisioner/guest'
 require 'vagrant/ansible_auto/util'
+require 'shellwords'
 
 module VagrantPlugins
   module AnsibleAuto
@@ -60,6 +61,7 @@ module VagrantPlugins
                 other_hostvars[:ssh_private_key_file] = remote_key_path
                 create_and_chown_remote_folder(File.dirname(remote_key_path))
                 machine.communicate.upload(source_key_path, remote_key_path)
+                machine.communicate.execute("chmod 0600 #{remote_key_path.shellescape}")
               end
             end
 

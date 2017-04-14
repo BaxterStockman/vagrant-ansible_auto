@@ -59,6 +59,16 @@ module VagrantPlugins
         require_relative 'cap/guest/posix/bash_installed'
         Cap::Guest::POSIX::BashInstalled
       end
+
+      guest_capability 'linux', :generate_private_key do
+        require_relative 'cap/guest/posix/private_key'
+        Cap::Guest::POSIX::PrivateKey
+      end
+
+      guest_capability 'linux', :fetch_public_key do
+        require_relative 'cap/guest/posix/public_key'
+        Cap::Guest::POSIX::PrivateKey
+      end
     end
   end
 end

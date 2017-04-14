@@ -1,7 +1,11 @@
 # frozen_string_literal: true
 require 'vagrant'
 require Vagrant.source_root + 'plugins/provisioners/ansible/provisioner/guest'
+require 'vagrant/util/keypair'
+
 require 'vagrant/ansible_auto/util'
+
+require 'log4r'
 require 'shellwords'
 
 module VagrantPlugins
@@ -9,6 +13,11 @@ module VagrantPlugins
     class Provisioner < VagrantPlugins::Ansible::Provisioner::Guest
       include Vagrant::Util::Retryable
       include VagrantPlugins::AnsibleAuto::Util
+
+      def initialize(machine, config)
+        super
+        @logger = Log4r::Logger.new('vagrant::provisioners::ansible_auto')
+      end
 
       def configure(root_config)
         super
@@ -22,6 +31,8 @@ module VagrantPlugins
         # on the `other' machine.
         # @config = other.config.ansible.merge(merged_config)
         if machine.guest.capability?(:ssh_server_address)
+          _pub, _priv, openssh = configure_keypair!
+
           with_active_machines do |other, name, provider|
             # We're dealing with the machine doing the provisining
             if name == machine.name
@@ -56,12 +67,19 @@ module VagrantPlugins
               if source_key_path.nil?
                 machine.ui.warn "Private key for #{name} not available for upload; provisioner will likely fail"
               else
-                remote_key_path = File.join(@config.tmp_path, 'ssh', name.to_s, provider.to_s, File.basename(source_key_path))
                 machine.ui.info "Adding #{name} to Ansible inventory"
+
+                if other.guest.capability?(:insert_public_key)
+                  other.guest.capability(:insert_public_key, openssh)
+                  remote_key_path = '~/.ssh/id_rsa'
+                else
+                  create_and_chown_remote_folder(File.dirname(remote_key_path))
+                  machine.communicate.upload(source_key_path, remote_key_path)
+                  machine.communicate.sudo("chmod 0600 #{remote_key_path}")
+                  remote_key_path = File.join(@config.tmp_path, 'ssh', name.to_s, provider.to_s, File.basename(source_key_path))
+                end
+
                 other_hostvars[:ssh_private_key_file] = remote_key_path
-                create_and_chown_remote_folder(File.dirname(remote_key_path))
-                machine.communicate.upload(source_key_path, remote_key_path)
-                machine.communicate.execute("chmod 0600 #{remote_key_path.shellescape}")
               end
             end
 
@@ -73,6 +91,65 @@ module VagrantPlugins
       end
 
     private
+
+      def configure_keypair!
+        # FIXME
+        remote_priv_key_path = "~#{machine.ssh_info[:username]}/.ssh/id_rsa"
+        remote_pub_key_path = "#{remote_priv_key_path}.pub"
+
+        # Check whether user has a private key already
+        if !machine.communicate.test("test -f #{remote_priv_key_path}") or !machine.communicate.test("test -f #{remote_pub_key_path}")
+          pub, priv, openssh = Vagrant::Util::Keypair.create
+          write_and_chown_and_chmod_remote_file(priv, remote_priv_key_path)
+          write_and_chown_and_chmod_remote_file(openssh, remote_pub_key_path)
+          return pub, priv, openssh
+        else
+          if machine.guest.capability?(:fetch_public_key)
+            return nil, nil, machine.guest.capability(:fetch_public_key, remote_priv_key_path)
+          end
+        end
+      end
+
+      def handle_remote_file(to, owner = machine.ssh_info[:username], mode = 0600)
+        machine.communicate.tap do |comm|
+          create_and_chown_remote_folder(File.dirname(to))
+
+          yield comm, to
+
+          comm.sudo("chown -h #{machine.ssh_info[:username]} #{to}")
+          comm.sudo("chmod #{'0%o' % mode} #{to}")
+        end
+      end
+
+      def create_and_chown_and_chmod_remote_file(from, to, mode = 0600)
+        handle_remote_file(to, mode) do |comm, target|
+          comm.upload(from, target)
+        end
+      end
+
+      def write_and_chown_and_chmod_remote_file(contents, to, mode = 0600)
+        handle_remote_file(to, mode) do |comm, target|
+          contents = contents.strip << "\n"
+
+          to_parent = File.dirname(to)
+
+          remote_path = "/tmp/vagrant-temp-asset-#{Time.now.to_i}"
+          Tempfile.open("vagrant-temp-asset") do |f|
+            f.binmode
+            f.write(contents)
+            f.fsync
+            f.close
+            machine.ui.info("uploading #{f.path} to #{remote_path}")
+            comm.upload(f.path, remote_path)
+          end
+
+          # FIXME configure perms on parent dir
+          comm.execute <<-EOH.gsub(/^ */, "")
+            mkdir #{to_parent}
+            mv #{remote_path} #{to}
+          EOH
+        end
+      end
 
       def generate_inventory_machines
         if config.strict_host_key_checking

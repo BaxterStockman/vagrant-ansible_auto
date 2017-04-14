@@ -135,7 +135,6 @@ module VagrantPlugins
       end
 
       def to_h
-        $stderr.puts vars.inspect
         {}.tap do |h|
           h.merge!(Hash[groups.map { |group, members| [group, members.to_a] }])
           h['_'] = hosts.map(&:to_h)

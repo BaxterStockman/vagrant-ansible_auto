@@ -27,11 +27,12 @@ module VagrantPlugins
       def provision
         @config = @__ansible_config.merge(config)
 
+        remote_priv_key_path, remote_pub_key_path, openssh = configure_keypair!
+
         # TODO: figure out how to access ansible_auto configuration done
         # on the `other' machine.
         # @config = other.config.ansible.merge(merged_config)
         if machine.guest.capability?(:ssh_server_address)
-          _pub, _priv, openssh = configure_keypair!
 
           with_active_machines do |other, name, provider|
             # We're dealing with the machine doing the provisining
@@ -62,24 +63,21 @@ module VagrantPlugins
                 machine.ui.warn "No private keys available for machine #{name}; provisioner will likely fail"
               end
 
-              source_key_path = fetch_private_key(other)
+              source_priv_key_path = fetch_private_key(other)
 
-              if source_key_path.nil?
+              if source_priv_key_path.nil?
                 machine.ui.warn "Private key for #{name} not available for upload; provisioner will likely fail"
               else
                 machine.ui.info "Adding #{name} to Ansible inventory"
 
                 if other.guest.capability?(:insert_public_key)
                   other.guest.capability(:insert_public_key, openssh)
-                  remote_key_path = '~/.ssh/id_rsa'
                 else
-                  create_and_chown_remote_folder(File.dirname(remote_key_path))
-                  machine.communicate.upload(source_key_path, remote_key_path)
-                  machine.communicate.sudo("chmod 0600 #{remote_key_path}")
-                  remote_key_path = File.join(@config.tmp_path, 'ssh', name.to_s, provider.to_s, File.basename(source_key_path))
+                  remote_priv_key_path = File.join(@config.tmp_path, 'ssh', name.to_s, provider.to_s, File.basename(source_priv_key_path))
+                  create_and_chown_and_chmod_remote_file(source_priv_key_path, remote_priv_key_path)
                 end
 
-                other_hostvars[:ssh_private_key_file] = remote_key_path
+                other_hostvars[:ssh_private_key_file] = remote_priv_key_path
               end
             end
 
@@ -99,15 +97,16 @@ module VagrantPlugins
 
         # Check whether user has a private key already
         if !machine.communicate.test("test -f #{remote_priv_key_path}") or !machine.communicate.test("test -f #{remote_pub_key_path}")
-          pub, priv, openssh = Vagrant::Util::Keypair.create
+          _pub, _priv, openssh = Vagrant::Util::Keypair.create
           write_and_chown_and_chmod_remote_file(priv, remote_priv_key_path)
           write_and_chown_and_chmod_remote_file(openssh, remote_pub_key_path)
-          return pub, priv, openssh
         else
           if machine.guest.capability?(:fetch_public_key)
-            return nil, nil, machine.guest.capability(:fetch_public_key, remote_priv_key_path)
+            openssh = machine.guest.capability(:fetch_public_key, remote_priv_key_path)
           end
         end
+
+        return remote_priv_key_path, remote_pub_key_path, openssh
       end
 
       def handle_remote_file(to, owner = machine.ssh_info[:username], mode = 0600)

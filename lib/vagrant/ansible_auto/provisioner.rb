@@ -97,7 +97,7 @@ module VagrantPlugins
 
         # Check whether user has a private key already
         if !machine.communicate.test("test -f #{remote_priv_key_path}") or !machine.communicate.test("test -f #{remote_pub_key_path}")
-          _pub, _priv, openssh = Vagrant::Util::Keypair.create
+          _pub, priv, openssh = Vagrant::Util::Keypair.create
           write_and_chown_and_chmod_remote_file(priv, remote_priv_key_path)
           write_and_chown_and_chmod_remote_file(openssh, remote_pub_key_path)
         elsif machine.guest.capability?(:fetch_public_key)

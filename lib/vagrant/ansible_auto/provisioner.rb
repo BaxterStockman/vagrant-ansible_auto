@@ -27,7 +27,7 @@ module VagrantPlugins
       def provision
         @config = @__ansible_config.merge(config)
 
-        remote_priv_key_path, remote_pub_key_path, openssh = configure_keypair!
+        remote_priv_key_path, _remote_pub_key_path, openssh = configure_keypair!
 
         # TODO: figure out how to access ansible_auto configuration done
         # on the `other' machine.
@@ -100,34 +100,32 @@ module VagrantPlugins
           _pub, _priv, openssh = Vagrant::Util::Keypair.create
           write_and_chown_and_chmod_remote_file(priv, remote_priv_key_path)
           write_and_chown_and_chmod_remote_file(openssh, remote_pub_key_path)
-        else
-          if machine.guest.capability?(:fetch_public_key)
-            openssh = machine.guest.capability(:fetch_public_key, remote_priv_key_path)
-          end
+        elsif machine.guest.capability?(:fetch_public_key)
+          openssh = machine.guest.capability(:fetch_public_key, remote_priv_key_path)
         end
 
-        return remote_priv_key_path, remote_pub_key_path, openssh
+        [remote_priv_key_path, remote_pub_key_path, openssh]
       end
 
-      def handle_remote_file(to, owner = machine.ssh_info[:username], mode = 0600)
+      def handle_remote_file(to, _owner = machine.ssh_info[:username], mode = 0o600)
         machine.communicate.tap do |comm|
           create_and_chown_remote_folder(File.dirname(to))
 
           yield comm, to
 
           comm.sudo("chown -h #{machine.ssh_info[:username]} #{to}")
-          comm.sudo("chmod #{'0%o' % mode} #{to}")
+          comm.sudo("chmod #{format('0%o', mode)} #{to}")
         end
       end
 
-      def create_and_chown_and_chmod_remote_file(from, to, mode = 0600)
+      def create_and_chown_and_chmod_remote_file(from, to, mode = 0o600)
         handle_remote_file(to, mode) do |comm, target|
           comm.upload(from, target)
         end
       end
 
-      def write_and_chown_and_chmod_remote_file(contents, to, mode = 0600)
-        handle_remote_file(to, mode) do |comm, target|
+      def write_and_chown_and_chmod_remote_file(contents, to, mode = 0o600)
+        handle_remote_file(to, mode) do |comm, _target|
           contents = contents.strip << "\n"
 
           to_parent = File.dirname(to)
@@ -142,7 +140,7 @@ module VagrantPlugins
             comm.upload(f.path, remote_path)
           end
 
-          # FIXME configure perms on parent dir
+          # FIXME: configure perms on parent dir
           comm.execute <<-EOH.gsub(/^ */, "")
             mkdir #{to_parent}
             mv #{remote_path} #{to}

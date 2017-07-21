@@ -1,23 +1,45 @@
-# frozen_string_literal: true
 Vagrant.configure(2) do |config|
-  define_vm = lambda do |name, box, memory|
-    config.vm.define name do |instance|
-      instance.vm.box      = box
-      instance.vm.hostname = name
-      instance.vm.network 'private_network', type: 'dhcp'
-      instance.vm.provider :virtualbox do |i|
-        i.name   = name
-        i.memory = memory
+  config.vm.box = 'hashicorp/precise64'
+
+  (1..2).each do |i|
+    name = "ansible-test-worker-#{i}"
+
+    config.vm.define name do |machine|
+      machine.vm.provider :docker do |d|
+        d.image = 'baxterstockman/minideb-vagrant'
+        d.has_ssh = true
       end
+
+      machine.ansible.groups = {
+        'worker' => name,
+        'cluster:children' => ['worker']
+      }
     end
   end
 
-  define_vm.call 'master',  'ubuntu/trusty32', 256
-  define_vm.call 'slave-1', 'ubuntu/trusty32', 256
-  define_vm.call 'slave-2', 'ubuntu/trusty32', 256
+  config.vm.define 'ansible-test-control' do |machine|
+    machine.vm.provider :docker do |d|
+      d.image = 'baxterstockman/minideb-vagrant'
+      d.has_ssh = true
+    end
 
-  config.ansible.groups = {
-    'cluster:children' => %w(master slaves),
-    'slaves'           => ['slave-1', 'slave-2'],
+    machine.vm.provision :ansible_auto do |ansible|
+      ansible.limit = '*'
+      ansible.playbook = 'playbooks/test.yml'
+    end
+
+    machine.ansible.groups = {
+      'control' => ['ansible-test-control'],
+      'cluster:children' => ['control']
+    }
+  end
+
+  config.ansible.vars = {
+    'control' => {
+      'role'  => 'ansible-control'
+    },
+    'worker' => {
+      'role'  => 'ansible-worker'
+    }
   }
 end

@@ -1,6 +1,46 @@
-inherit_from:
-  - https://gist.githubusercontent.com/infertux/cdd2ccc6e0a0cd94f458/raw
+#inherit_from:
+#  - https://gist.githubusercontent.com/infertux/cdd2ccc6e0a0cd94f458/raw
 
-Style/SpecialGlobalVars:
+AllCops:
+  Exclude:
+    - Vagrantfile*
+
+Style/FileName:
+  Exclude:
+    - vagrant-spec.config.rb
+
+Layout/AccessModifierIndentation:
+  EnforcedStyle: outdent
+
+Lint/UnusedBlockArgument:
+  Exclude:
+    - 'spec/**/*.rb'
+
+Lint/UnusedMethodArgument:
+  Exclude:
+    - 'spec/**/*.rb'
+
+Metrics/AbcSize:
   Enabled: false
 
+Metrics/CyclomaticComplexity:
+  Enabled: false
+
+Metrics/LineLength:
+  Enabled: false
+
+Metrics/PerceivedComplexity:
+  Enabled: false
+
+Metrics/MethodLength:
+  Max: 30
+
+Metrics/ModuleLength:
+  Max: 200
+
+Metrics/ClassLength:
+  Max: 200
+
+Metrics/BlockLength:
+  Exclude:
+    - 'spec/**/*.rb'

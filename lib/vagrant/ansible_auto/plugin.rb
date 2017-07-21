@@ -69,6 +69,12 @@ module VagrantPlugins
         require_relative 'cap/guest/posix/public_key'
         Cap::Guest::POSIX::PrivateKey
       end
+
+      action_hook 'environment_plugins_loaded' do
+        require 'i18n'
+        I18n.load_path << VagrantPlugins::AnsibleAuto.source_root.join('locales/en.yml')
+        I18n.reload!
+      end
     end
   end
 end

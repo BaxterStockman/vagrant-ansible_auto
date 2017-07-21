@@ -1,0 +1,28 @@
+en:
+  vagrant:
+    ansible_auto:
+      provisioner:
+        machine_not_configured: 'Machine %{machine_name} is not configured for this environment; omitting it from the inventory'
+        private_key_missing: 'Private key for %{machine_name} not available for upload; provisioner will likely fail'
+        inventory_addition: 'Adding %{machine_name} to Ansible inventory'
+        public_key_authorized: 'Control machine public key already authorized on %{machine_name}'
+        inserting_public_key: 'Inserting control machine public key on %{machine_name}'
+        cannot_insert_public_key: 'Cannot insert control machine public key on %{machine_name}'
+        uploading_private_key: 'Uploading private key for %{machine_name} onto control machine'
+      command:
+        root:
+          synopsis: 'build an Ansible inventory'
+          option: {}
+          diag: {}
+        skel:
+          synopsis: 'output a dynamic Ansible inventory'
+          usage: 'Usage: vagrant ansible inventory [options]'
+          option:
+            list: 'List all hosts as JSON'
+          diag:
+            not_running: 'machine %{machine} is not running; falling back to default hostvar values'
+      errors:
+        inventory:
+          missing_group: 'expected group %{group} is missing from the inventory'
+          group_missing_child: 'group %{group} defines nonextant child group %{child}'
+          invalid_host_type: "cannot add object of type %{type} as inventory host"

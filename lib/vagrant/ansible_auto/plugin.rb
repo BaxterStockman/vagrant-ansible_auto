@@ -35,7 +35,7 @@ module VagrantPlugins
         Provisioner
       end
 
-      guest_capability 'linux', :check_open_port do
+      guest_capability 'linux', :port_open? do
         require_relative 'cap/guest/posix/check_open_port'
         Cap::Guest::POSIX::CheckOpenPort
       end

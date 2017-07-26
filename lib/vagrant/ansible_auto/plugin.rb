@@ -62,7 +62,12 @@ module VagrantPlugins
 
       guest_capability 'linux', :fetch_public_key do
         require_relative 'cap/guest/posix/public_key'
-        Cap::Guest::POSIX::PrivateKey
+        Cap::Guest::POSIX::PublicKey
+      end
+
+      guest_capability 'linux', :authorized_key? do
+        require_relative 'cap/guest/posix/public_key'
+        Cap::Guest::POSIX::PublicKey
       end
 
       action_hook 'environment_plugins_loaded' do

@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'vagrant/ansible_auto/util/shell_quote'
+
 module VagrantPlugins
   module AnsibleAuto
     module Cap
@@ -18,6 +20,10 @@ module VagrantPlugins
                 end
 
                 public_key
+              end
+
+              def authorized_key?(machine, content, path = '~/.ssh/authorized_keys')
+                machine.communicate.test("grep -q -x -F '#{shellescape(content.chomp)}' #{shellescape(path)}")
               end
             end
           end

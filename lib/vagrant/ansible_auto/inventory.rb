@@ -30,17 +30,22 @@ module VagrantPlugins
         @groups = nil
 
         new_groups.each do |group_heading, entries|
+          # TODO: handle group names with more than one colon/escaped colons
           group, type = group_heading.to_s.split(':')
           case type
           when 'vars'
-              entries = {} if entries.nil?
-              vars_for(group, entries)
+            entries = {} if entries.nil?
+            vars_for(group, entries)
           when 'children'
-              entries = [] if entries.nil?
-              children_of(group, *entries)
+            entries = [] if entries.nil?
+            children_of(group, *entries)
+          else
+            entries = [] if entries.nil?
+            if entries.is_a? Hash
+              add_complex_group(group, entries)
             else
-              entries = [] if entries.nil?
               add_group(group, *entries)
+            end
           end
         end
 
@@ -181,8 +186,11 @@ module VagrantPlugins
 
     private
 
-      def unset?(obj)
-        defined?(obj).nil? or obj.nil?
+      def add_complex_group(group, group_spec = {})
+        group_spec = Util::HashWithIndifferentAccess.new(group_spec)
+        vars_for(group, group_spec['vars']) if group_spec.key? 'vars'
+        children_of(group, *(group_spec['children'])) if group_spec.key? 'children'
+        add_group(group, *(group_spec['hosts'])) if group_spec.key? 'hosts'
       end
     end
   end

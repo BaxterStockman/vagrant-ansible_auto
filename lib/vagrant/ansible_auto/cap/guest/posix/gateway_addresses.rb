@@ -1,15 +1,18 @@
 # frozen_string_literal: true
-require 'set'
 
 module VagrantPlugins
   module AnsibleAuto
     module Cap
       module Guest
         module POSIX
+          # List gateway addresses for the interfaces on a machine
           class GatewayAddresses
             class << self
+              # @param [Machine] machine a guest machine
+              # @return [Array<String>] a list of the gateway IP addresses for
+              #   the machine
               def gateway_addresses(machine)
-                with_default_gateway_addresses(machine).to_a.compact
+                with_default_gateway_addresses(machine).to_a.compact.uniq
               end
 
             private

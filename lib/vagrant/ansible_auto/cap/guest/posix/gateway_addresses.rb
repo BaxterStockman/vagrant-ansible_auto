@@ -17,39 +17,21 @@ module VagrantPlugins
               def with_default_gateway_addresses(machine)
                 return enum_for(__method__, machine) unless block_given?
 
-                seen_addresses = Set.new
-                yield_unseen_address = lambda do |a|
-                  yield a unless seen_addresses.include? a
-                  seen_addresses << a
-                end
-
                 machine.communicate.execute('ip route show', error_check: false) do |type, data|
                   if type == :stdout
-                    data.lines.each do |line|
-                      if line.start_with?('default')
-                        yield_unseen_address.call(line.split[2])
-                      end
-                    end
+                    data.each_line { |l| yield l.split[2] if l.start_with? 'default' }
                   end
                 end
 
                 machine.communicate.execute('route -n', error_check: false) do |type, data|
                   if type == :stdout
-                    data.lines.each do |line|
-                      if line.start_with?('0.0.0.0')
-                        yield_unseen_address.call(line.split[1])
-                      end
-                    end
+                    data.each_line { |l| yield l.split[1] if l.start_with? '0.0.0.0' }
                   end
                 end
 
                 machine.communicate.execute('netstat -rn', error_check: false) do |type, data|
                   if type == :stdout
-                    data.lines.each do |line|
-                      if line.start_with?('0.0.0.0')
-                        yield_unseen_address.call(line.split[1])
-                      end
-                    end
+                    data.each_line { |l| yield l.split[1] if l.start_with? '0.0.0.0' }
                   end
                 end
               end

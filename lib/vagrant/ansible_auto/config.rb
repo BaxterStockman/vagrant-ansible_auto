@@ -61,18 +61,6 @@ module VagrantPlugins
           result.inventory  = inventory.merge(other.inventory)
         end
       end
-
-    private
-
-      def conditional_merge(a, b)
-        if b.nil? or b == UNSET_VALUE
-          a
-        elsif a.nil? or a == UNSET_VALUE
-          b
-        else
-          Vagrant::Util::DeepMerge.deep_merge(a, b)
-        end
-      end
     end
   end
 end

@@ -1,8 +1,17 @@
 # frozen_string_literal: true
+
+# Namespace for Vagrant plugins
 module VagrantPlugins
+  # Namespace for the +ansible_auto+ provisioner and +ansible+ command
   module AnsibleAuto
+    # Vagrant plugin class for the +ansible_auto+ provisioner and +ansible+
+    # command
     class Plugin < Vagrant.plugin(2)
-      name 'ansible inventory'
+      name 'ansible auto'
+      description <<-DESC
+      Automatically generate Ansible inventories for use when running Ansible
+      on guest machines
+      DESC
 
       config 'ansible' do
         require_relative 'config'

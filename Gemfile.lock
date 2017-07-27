@@ -10,7 +10,7 @@ GIT
 
 GIT
   remote: git://github.com/mitchellh/vagrant.git
-  revision: 4d300186653ca1585782c10088d6be41d88482c5
+  revision: a7b228eb698352638270dc076d0385fa324ca187
   specs:
     vagrant (1.9.8.dev)
       childprocess (~> 0.6.0)
@@ -83,7 +83,7 @@ GEM
       net-ssh (>= 2.6.5)
     net-ssh (4.1.0)
     nori (2.6.0)
-    parallel (1.11.2)
+    parallel (1.12.0)
     parser (2.4.0.0)
       ast (~> 2.2)
     powerpack (0.1.1)
@@ -160,7 +160,7 @@ DEPENDENCIES
   coveralls
   pry
   rake (~> 10.0)
-  rspec
+  rspec (~> 2.14)
   rubocop
   simplecov
   vagrant!

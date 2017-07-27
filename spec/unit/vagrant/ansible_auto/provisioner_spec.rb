@@ -238,7 +238,8 @@ describe VagrantPlugins::AnsibleAuto::Provisioner do
 
     context 'given a machine that is not configured for the current environment' do
       it 'carps and ignores the machine', skip_after: true do
-        expect(machine.ui).to receive(:warn).with(/\AUnable to find machine/).at_least(:once)
+        expect(logger).to receive(:warn).with(/\AMachine .*? not configured for this environment/).at_least(:once)
+        expect(logger).to receive(:warn).with(/\AUnable to find machine/).at_least(:once)
         allow(machine.env).to receive(:machine).and_raise(Vagrant::Errors::MachineNotFound, name: 'dummy')
         provisioner.provision
       end

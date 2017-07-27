@@ -9,6 +9,9 @@ en:
         inserting_public_key: 'Inserting control machine public key on %{machine_name}'
         cannot_insert_public_key: 'Cannot insert control machine public key on %{machine_name}'
         uploading_private_key: 'Uploading private key for %{machine_name} onto control machine'
+        cannot_configure_keys: 'unable to insert public key or upload existing private key to control machine for %{machine_name}'
+        uploading_file: 'Uploading %{local_path} to %{remote_path}'
+        cannot_find_machine: 'Unable to find machine %{machine_name}: %{error_message}'
       command:
         root:
           synopsis: 'build an Ansible inventory'

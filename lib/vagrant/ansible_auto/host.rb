@@ -69,9 +69,8 @@ module VagrantPlugins
       end
 
       # @return [Hash] the {Host}'s attributes keyed to its attribute names
-      #   prepended with +"ansible_"+
       # @example
-      #   host = Host.new("myhost", {ssh_user: 'me', ssh_port: 2200})
+      #   host = Host.new("myhost", {ansible_ssh_user: 'me', ansible_ssh_port: 2200})
       #   host.hostvars #=> {
       #                 #     'ansible_ssh_user'  => 'me',
       #                 #     'ansible_ssh_host'  => '127.0.0.1',

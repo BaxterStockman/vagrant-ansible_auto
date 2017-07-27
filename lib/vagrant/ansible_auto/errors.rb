@@ -23,6 +23,14 @@ module VagrantPlugins
       class InvalidHostTypeError < InventoryError
         error_key(:invalid_host_type)
       end
+
+      class CommandError < Vagrant::Errors::VagrantError
+        error_namespace('vagrant.ansible_auto.errors.command')
+      end
+
+      class UnrecognizedCommandError < CommandError
+        error_key('unrecognized_command')
+      end
     end
   end
 end

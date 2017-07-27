@@ -1,57 +1,60 @@
 # frozen_string_literal: true
+
 require 'optparse'
+
+require 'vagrant/ansible_auto/errors'
 
 module VagrantPlugins
   module AnsibleAuto
+    # Vagrant +ansible+ subcommand
     module Command
+      # Command for creating a static Ansible inventory from the machines
+      # defined in a Vagrantfile
       class Root < Vagrant.plugin(2, :command)
+        # @return [String] summary of the +ansible+ command
         def self.synopsis
           'build ansible inventory'
         end
 
-        def initialize(argv, env)
-          super
-
-          @main_args, @sub_command, @sub_args = split_main_and_subcommand(argv)
-
-          @subcommands = Vagrant::Registry.new
-
-          @subcommands.register(:inventory) do
-            require_relative 'inventory'
-            Inventory
-          end
-        end
-
+        # Execute the +ansible+ command
+        # @return [Integer] the exit status of the command
         def execute
-          if @main_args.include?('-h') || @main_args.include?('--help')
-            return help
+          @argv, subcommand_name, subcommand_argv = split_main_and_subcommand(@argv)
+
+          if subcommand_name.nil?
+            @argv = ['-h'] if @argv.empty?
+            return parse_options(prepare_options)
+          elsif subcommands.key? subcommand_name.to_sym
+            return subcommands.get(subcommand_name.to_sym).new(subcommand_argv, @env.dup).execute
+          else
+            raise Errors::UnrecognizedCommandError, command: subcommand_name
           end
-
-          command_class = @subcommands.get(@sub_command.to_sym) if @sub_command
-          return help if !command_class || !@sub_command
-          @logger.debug("Invoking command class: #{command_class} #{@sub_args.inspect}")
-
-          command_class.new(@sub_args, @env).execute
         end
 
-        def help
-          opts = OptionParser.new do |o|
+      private
+
+        def prepare_options
+          OptionParser.new do |o|
             o.banner = 'Usage: vagrant ansible <subcommand> [<options>]'
             o.separator ''
             o.separator 'Available subcommands:'
 
-            keys = []
-            @subcommands.each { |key, _value| keys << key.to_s }
-
-            keys.sort.each do |key|
-              o.separator "     #{key}"
+            subcommands.keys.sort.each do |k|
+              o.separator "    #{k}"
             end
 
-            o.separator ""
-            o.separator "For help on any individual subcommand run `vagrant ansible <subcommand> -h`"
+            o.separator ''
+            o.separator 'For help on any individual subcommand run `vagrant ansible <subcommand> -h`'
           end
+        end
 
-          @env.ui.info(opts.help, prefix: false)
+        def subcommands
+          @subcommands ||= Vagrant::Registry.new.tap do |r|
+            r.register(:inventory) do
+              require_relative 'inventory'
+              Inventory
+            end
+          end
         end
       end
     end

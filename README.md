@@ -47,9 +47,9 @@ end
 Running `vagrant ansible inventory` will print this Ansible inventory:
 
 ```ini
-ansible-test-worker-1 ansible_ssh_user=vagrant ansible_ssh_host=127.0.0.1 ansible_ssh_port=2222 ansible_ssh_private_key_file=/home/matt/git/vagrant-ansible_inventory/.vagrant/machines/ansible-test-worker-1/virtualbox/private_key
-ansible-test-worker-2 ansible_ssh_user=vagrant ansible_ssh_host=127.0.0.1 ansible_ssh_port=2200 ansible_ssh_private_key_file=/home/matt/git/vagrant-ansible_inventory/.vagrant/machines/ansible-test-worker-2/virtualbox/private_key
-ansible-test-control ansible_ssh_user=vagrant ansible_ssh_host=127.0.0.1 ansible_ssh_port=2201 ansible_ssh_private_key_file=/home/matt/git/vagrant-ansible_inventory/.vagrant/machines/ansible-test-control/virtualbox/private_key
+ansible-test-worker-1 ansible_ssh_user=vagrant ansible_ssh_host=127.0.0.1 ansible_ssh_port=2222 ansible_ssh_private_key_file=/home/user/vagrant/cluster/.vagrant/machines/ansible-test-worker-1/virtualbox/private_key
+ansible-test-worker-2 ansible_ssh_user=vagrant ansible_ssh_host=127.0.0.1 ansible_ssh_port=2200 ansible_ssh_private_key_file=/home/user/vagrant/cluster/.vagrant/machines/ansible-test-worker-2/virtualbox/private_key
+ansible-test-control ansible_ssh_user=vagrant ansible_ssh_host=127.0.0.1 ansible_ssh_port=2201 ansible_ssh_private_key_file=/home/user/vagrant/cluster/.vagrant/machines/ansible-test-control/virtualbox/private_key
 [control]
 ansible-test-control
 [worker]
@@ -87,10 +87,10 @@ Vagrant.configure(2) do |config|
 
       # Will show up in inventory as
       #   [dev:vars]
-      #   ansible_port = 2222
+      #   git_branch = devel
       ansible.vars = {
         'dev' => {
-          'ansible_port' => 2222
+          'git_branch' => 'devel'
         }
       }
 
@@ -118,7 +118,7 @@ inventory.
 
 ## Contributing
 
-1. Fork it ( https://github.com/joiggama/vagrant-ansible_auto/fork )
+1. Fork it ( https://github.com/BaxterStockman/vagrant-ansible_auto/fork )
 2. Create your feature branch (`git checkout -b my-new-feature`)
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)

@@ -1,83 +1,63 @@
 # frozen_string_literal: true
+
 require 'vagrant'
 require Vagrant.source_root + 'plugins/provisioners/ansible/provisioner/guest'
 require 'vagrant/util/keypair'
 
-require 'vagrant/ansible_auto/util'
+require 'vagrant/ansible_auto/util/keys'
 
+require 'i18n'
 require 'log4r'
-require 'shellwords'
 
 module VagrantPlugins
   module AnsibleAuto
+    # Class backing the +ansible_auto+ provisioner
     class Provisioner < VagrantPlugins::Ansible::Provisioner::Guest
       include Vagrant::Util::Retryable
-      include VagrantPlugins::AnsibleAuto::Util
+      include Util::Keys
 
       def initialize(machine, config)
         super
         @logger = Log4r::Logger.new('vagrant::provisioners::ansible_auto')
       end
 
+      # Configure the provisioner by storing the root Ansible configuration
+      # object for use as the set of base options for a particular machine
+      # @api private
+      # @return [void]
       def configure(root_config)
         super
         @__ansible_config = root_config.ansible
       end
 
+      # Provision a {Vagrant::Machine} with the +ansible_auto+ provisioner
+      # @api private
+      # @return [void]
       def provision
         @config = @__ansible_config.merge(config)
 
-        remote_priv_key_path, _remote_pub_key_path, openssh = configure_keypair!
+        return super unless machine.guest.capability?(:ssh_server_address)
 
-        # TODO: figure out how to access ansible_auto configuration done
-        # on the `other' machine.
-        # @config = other.config.ansible.merge(merged_config)
-        if machine.guest.capability?(:ssh_server_address)
-
-          with_active_machines do |other, name, provider|
-            # We're dealing with the machine doing the provisining
+        with_active_machines do |other, name, provider|
+          if other.nil?
+            @logger.warn I18n.t('vagrant.ansible_auto.provisioner.machine_not_configured', machine_name: name)
+          else
             if name == machine.name
-              other_hostvars = { connection: 'local' }
-            elsif other.nil?
-              machine.ui.warn "Machine #{name} is not configured for this environment; omitting it from the inventory"
+              other_hostvars = { ansible_connection: 'local' }
             else
-              # The machines we are trying to manage might not yet be ready to
-              # connect -- retry a configurable number of times/durations until
-              # we can connect; otherwise raise an exception.
-              private_key_paths = []
-              retryable(on: Vagrant::Errors::SSHNotReady, tries: @config.host_connect_tries, sleep: @config.host_connect_sleep) do
-                raise Vagrant::Errors::SSHNotReady unless other.communicate.ready? and !other.ssh_info.nil?
+              # Merge the other machine's configuration, with this machine's
+              # configuration taking precedence.
+              @config = other.config.ansible.merge(@config)
 
-                private_key_paths = other.ssh_info.fetch(:private_key_path, [])
-                raise Vagrant::Errors::SSHNotReady if private_key_paths.empty?
-
-                if other.config.ssh.insert_key
-                  raise Vagrant::Errors::SSHNotReady unless private_key_paths.any? { |k| !insecure_key?(k) }
-                end
-              end
+              wait_for_ssh_ready!(other, @config.host_connect_tries, @config.host_connect_sleep)
 
               ssh_host, ssh_port = machine.guest.capability(:ssh_server_address, other)
-              other_hostvars = { ssh_host: ssh_host, ssh_port: ssh_port }
+              other_hostvars = { ansible_ssh_host: ssh_host, ansible_ssh_port: ssh_port }
 
-              if private_key_paths.empty?
-                machine.ui.warn "No private keys available for machine #{name}; provisioner will likely fail"
-              end
+              machine.ui.info I18n.t('vagrant.ansible_auto.provisioner.inventory_addition', machine_name: name)
 
-              source_priv_key_path = fetch_private_key(other)
-
-              if source_priv_key_path.nil?
-                machine.ui.warn "Private key for #{name} not available for upload; provisioner will likely fail"
-              else
-                machine.ui.info "Adding #{name} to Ansible inventory"
-
-                if other.guest.capability?(:insert_public_key)
-                  other.guest.capability(:insert_public_key, openssh)
-                else
-                  remote_priv_key_path = File.join(@config.tmp_path, 'ssh', name.to_s, provider.to_s, File.basename(source_priv_key_path))
-                  create_and_chown_and_chmod_remote_file(source_priv_key_path, remote_priv_key_path)
-                end
-
-                other_hostvars[:ssh_private_key_file] = remote_priv_key_path
+              unless (other_ssh_private_key_file = configure_ssh_access!(other, name, provider)).nil?
+                other_hostvars[:ansible_ssh_private_key_file] = other_ssh_private_key_file
               end
             end
 
@@ -85,75 +65,132 @@ module VagrantPlugins
           end
         end
 
+        @config.inventory.validate!
+
         super
       end
 
     private
 
-      def configure_keypair!
-        # FIXME
-        remote_priv_key_path = "~#{machine.ssh_info[:username]}/.ssh/id_rsa"
-        remote_pub_key_path = "#{remote_priv_key_path}.pub"
-
-        # Check whether user has a private key already
-        if !machine.communicate.test("test -f #{remote_priv_key_path}") or !machine.communicate.test("test -f #{remote_pub_key_path}")
-          _pub, priv, openssh = Vagrant::Util::Keypair.create
-          write_and_chown_and_chmod_remote_file(priv, remote_priv_key_path)
-          write_and_chown_and_chmod_remote_file(openssh, remote_pub_key_path)
-        elsif machine.guest.capability?(:fetch_public_key)
-          openssh = machine.guest.capability(:fetch_public_key, remote_priv_key_path)
-        end
-
-        [remote_priv_key_path, remote_pub_key_path, openssh]
+      def control_machine_ssh_key_dir
+        Pathname.new(@config.tmp_path).join('ssh')
       end
 
-      def handle_remote_file(to, _owner = machine.ssh_info[:username], mode = 0o600)
+      def control_machine_private_key_path
+        @control_machine_private_key_path ||= control_machine_ssh_key_dir.join('vagrant_ansible_id_rsa')
+      end
+
+      def control_machine_public_key_path
+        @control_machine_public_key_path ||= control_machine_private_key_path.sub_ext('.pub')
+      end
+
+      def control_machine_public_key
+        @control_machine_public_key ||= configure_keypair!
+      end
+
+      def configure_ssh_access!(other, name, provider)
+        # Insert the control machine's public key on the target machines
+        if config.insert_control_machine_public_key
+          insert_control_machine_public_key!(other, name)
+        elsif config.upload_inventory_host_private_keys
+          upload_inventory_host_private_key!(other, name, provider)
+        else
+          machine.ui.warn I18n.t('vagrant.ansible_auto.provisioner.cannot_configure_keys', machine_name: name)
+        end
+      end
+
+      def insert_control_machine_public_key!(other, name)
+        # Don't bother inserting the key if it is already authorized
+        if other.guest.capability?(:authorized_key?) && other.guest.capability(:authorized_key?, control_machine_public_key)
+          @logger.info I18n.t('vagrant.ansible_auto.provisioner.public_key_authorized', machine_name: name)
+        elsif other.guest.capability?(:insert_public_key)
+          @logger.info I18n.t('vagrant.ansible_auto.provisioner.inserting_public_key', machine_name: name)
+          other.guest.capability(:insert_public_key, control_machine_public_key)
+        else
+          @logger.warn I18n.t('vagrant.ansible_auto.provisioner.cannot_insert_public_key', machine_name: name)
+          return
+        end
+
+        control_machine_private_key_path
+      end
+
+      def upload_inventory_host_private_key!(other, name, provider)
+        source_priv_key_path = fetch_private_key(other)
+
+        if source_priv_key_path.nil?
+          @logger.warn I18n.t('vagrant.ansible_auto.provisioner.private_key_missing', machine_name: name)
+          return
+        end
+
+        @logger.info I18n.t('vagrant.ansible_auto.provisioner.uploading_private_key', machine_name: name)
+
+        other_priv_key_path = control_machine_ssh_key_dir.join(name.to_s, provider.to_s, File.basename(source_priv_key_path))
+        create_and_chown_and_chmod_remote_file(source_priv_key_path, other_priv_key_path)
+        other_priv_key_path
+      end
+
+      def configure_keypair!
+        # Check whether user already has a private key
+        # TODO ensure key paths are properly expanded
+        if !machine.communicate.test("test -r #{control_machine_private_key_path} && test -r #{control_machine_public_key_path}")
+          _pub, priv, openssh = Vagrant::Util::Keypair.create
+          write_and_chown_and_chmod_remote_file(priv, control_machine_private_key_path)
+          write_and_chown_and_chmod_remote_file(openssh, control_machine_public_key_path)
+        elsif machine.guest.capability?(:fetch_public_key)
+          openssh = machine.guest.capability(:fetch_public_key, control_machine_private_key_path)
+        end
+
+        openssh
+      end
+
+      # @todo clean up repeated keyword args
+      def handle_remote_file(to, owner = machine.ssh_info[:username], mode = 0o600)
         machine.communicate.tap do |comm|
           create_and_chown_remote_folder(File.dirname(to))
 
           yield comm, to
 
-          comm.sudo("chown -h #{machine.ssh_info[:username]} #{to}")
+          comm.sudo("chown -h #{owner} #{to}")
           comm.sudo("chmod #{format('0%o', mode)} #{to}")
         end
       end
 
       def create_and_chown_and_chmod_remote_file(from, to, mode = 0o600)
-        handle_remote_file(to, mode) do |comm, target|
+        handle_remote_file(to, machine.ssh_info[:username], mode) do |comm, target|
           comm.upload(from, target)
         end
       end
 
       def write_and_chown_and_chmod_remote_file(contents, to, mode = 0o600)
-        handle_remote_file(to, mode) do |comm, _target|
+        handle_remote_file(to, machine.ssh_info[:username], mode) do |comm, target|
           contents = contents.strip << "\n"
 
-          to_parent = File.dirname(to)
+          target_parent = File.dirname(target)
 
           remote_path = "/tmp/vagrant-temp-asset-#{Time.now.to_i}"
-          Tempfile.open("vagrant-temp-asset") do |f|
+          Tempfile.open('vagrant-temp-asset') do |f|
             f.binmode
             f.write(contents)
             f.fsync
             f.close
-            machine.ui.info("uploading #{f.path} to #{remote_path}")
+            machine.ui.detail I18n.t('vagrant.ansible_auto.provisioner.uploading_file', local_path: f.path, remote_path: remote_path)
             comm.upload(f.path, remote_path)
           end
 
           # FIXME: configure perms on parent dir
-          comm.execute <<-EOH.gsub(/^ */, "")
-            mkdir #{to_parent}
-            mv #{remote_path} #{to}
+          comm.execute <<-EOH.gsub(/^ */, '')
+            mkdir -p #{target_parent}
+            mv #{remote_path} #{target}
           EOH
         end
       end
 
       def generate_inventory_machines
-        if config.strict_host_key_checking
-          machine_format = '%s'
-        else
-          machine_format = "%s ansible_ssh_extra_args='-o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -o StrictHostKeyChecking=no'"
-        end
+        machine_format = if config.strict_host_key_checking
+                           '%s'
+                         else
+                           "%s ansible_ssh_extra_args='-o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -o StrictHostKeyChecking=no'"
+                         end
 
         config.inventory.with_ini_lines_hosts.map do |host_spec|
           machine_format % host_spec
@@ -171,9 +208,18 @@ module VagrantPlugins
           begin
             yield machine.env.machine(name, provider), name, provider
           rescue Vagrant::Errors::MachineNotFound, CommunicatorWinRM::Errors::WinRMNotReady => e
-            machine.ui.warn "unable to find machine #{name} (#{e.message})"
-            return nil, name, provider
+            @logger.warn I18n.t('vagrant.ansible_auto.provisioner.cannot_find_machine', machine_name: name, error_message: e.message)
+            yield nil, name, provider
           end
+        end
+      end
+
+      # The machines we are trying to manage might not yet be ready to
+      # connect -- retry a configurable number of times/durations until
+      # we can connect; otherwise raise an exception.
+      def wait_for_ssh_ready!(other, tries, sleep)
+        retryable(on: Vagrant::Errors::SSHNotReady, tries: tries, sleep: sleep) do
+          raise Vagrant::Errors::SSHNotReady unless other.communicate.ready? && !other.ssh_info.nil?
         end
       end
     end

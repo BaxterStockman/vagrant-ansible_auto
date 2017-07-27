@@ -24,10 +24,12 @@ module VagrantPlugins
         error_key(:invalid_host_type)
       end
 
+      # Class representing {Command} errors
       class CommandError < Vagrant::Errors::VagrantError
         error_namespace('vagrant.ansible_auto.errors.command')
       end
 
+      # Raised on receipt of an unrecognized +vagrant ansible+ subcommand
       class UnrecognizedCommandError < CommandError
         error_key('unrecognized_command')
       end

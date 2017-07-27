@@ -1,31 +1,70 @@
 # frozen_string_literal: true
+
 require 'set'
 require 'json'
+
+require 'vagrant/ansible_auto/errors'
 require 'vagrant/ansible_auto/host'
+require 'vagrant/ansible_auto/util/config'
+require 'vagrant/ansible_auto/util/hash_with_indifferent_access'
 
 module VagrantPlugins
   module AnsibleAuto
+    # Class representing an Ansible inventory with hosts, groups, group
+    # children, and group variables
     class Inventory
+      include VagrantPlugins::AnsibleAuto::Util::Config
+
+      # @todo protect creation/assignment to this group
+      UNNAMED_GROUP = '_'.freeze
+
+      # @return [Hash{String=>Set<Host>}] group names mapped to their members
       def groups
-        @groups = Hash.new { |hash, key| hash[key] = Set.new } if unset?(@groups)
+        if unset? @groups
+          @groups = Util::HashWithIndifferentAccess.new do |hash, key|
+            hash[key] = Set.new
+          end
+        end
+
         @groups
       end
 
+      # @return [Set<Host>] the hosts in the {Inventory}
       def hosts
         @hosts = Set.new if unset?(@hosts)
         @hosts
       end
 
+      # @return [Hash{String=>Hash}] group names mapped to their variables
       def vars
-        @vars = Hash.new { |hash, key| hash[key] = {} } if unset?(@vars)
+        if unset? @vars
+          @vars = Util::HashWithIndifferentAccess.new do |hash, key|
+            hash[key] = Util::HashWithIndifferentAccess.new
+          end
+        end
+
         @vars
       end
 
+      # @return [Hash{String=>Set}] group names mapped to their children
       def children
-        @children = Hash.new { |hash, key| hash[key] = Set.new } if unset?(@children)
+        if unset? @children
+          @children = Util::HashWithIndifferentAccess.new do |hash, key|
+            hash[key] = Set.new
+          end
+        end
+
         @children
       end
 
+      # Set the groups for the {Inventory}.
+      # @note overwrites the current {#groups}.
+      # @param [Hash{String=>Array,Hash}] new_groups the groups to assign to the
+      #   {Inventory}
+      # @option new_groups [Array] group the hosts in +group+
+      # @option new_groups [Hash] group:vars the variables for +group+
+      # @option new_groups [Array] group:chilren the child groups for +group+
+      # @return [Hash{String=>Array,Hash}] the created groups
       def groups=(new_groups)
         @groups = nil
 
@@ -52,55 +91,87 @@ module VagrantPlugins
         groups
       end
 
-      def hosts=(_new_hosts)
+      # Set the hosts for the {Inventory}
+      # @note overwrites the current {#hosts}.
+      # @param [Hash{String=>Hash}] new_hosts the hosts in the inventory
+      # @option new_hosts [Hash{String=>Hash, nil}] host a host plus any hostvars
+      # @return [Hash{String=>Hash}] the created hosts
+      def hosts=(new_hosts)
         @hosts = nil
 
-        news_hosts.each do |host, hostvars|
-          hostvars = {} if hostvars.nil?
-          add_host(host, hostvars)
+        new_hosts.each do |host, hostvars|
+          add_host(host, hostvars || {})
         end
 
         hosts
       end
 
+      # Set the variables for the groups in the {Inventory}
+      # @note overwrites the current {#vars}
+      # @param [Hash{String,Hash}] new_vars the variables to add to the
+      #   {Inventory}
+      # @option new_vars [Hash{String,Hash}] group a group plus any group
+      #   variables
+      # @return [Hash{String,Hash}] the created variables
       def vars=(new_vars)
         @vars = nil
 
-        new_vars.each_pair do |group, group_vars|
+        new_vars.each do |group, group_vars|
           vars_for(group, group_vars)
         end
 
         vars
       end
 
+      # Set the children of the groups in the {Inventory}
+      # @note overwrites the currrent {#children}
+      # @param [Hash{String=>Array<String>}] new_children the group children to add to
+      #   the {Inventory}
+      # @option new_children [Array<String>] group a group name and the list of
+      #   its children
+      # @return [Hash{String=>Set<String>}] the created children
       def children=(new_children)
         @children = nil
 
-        new_children.each_pair do |group, group_children|
+        new_children.each do |group, group_children|
           children_of(group, *group_children)
         end
 
         children
       end
 
+      # Add a group to the {Inventory}
+      # @param [#to_s] group the name of the group
+      # @param [Array] members the hosts to add to the group
+      # @return [Set] the members of the added group
       def add_group(group, *members)
+        add_complex_group(group, members.pop) if members.last.is_a? Hash
+
         groups[group.to_s].tap do |group_members|
           group_members.merge(members)
           return group_members
         end
       end
 
-      def add_host(host, hostvars = {})
+      # Add a host to the {Inventory}
+      # @param [Host,String,Symbol,Vagrant::Machine] host the host to add
+      # @param [Hash] hostvars hostvars to assign to the host
+      def add_host(host, hostvars = nil)
         hosts.add case host
                   when Host
-                    host
+                    host.tap { |h| h.hostvars = hostvars unless hostvars.nil? }
                   when String, Symbol
-                    Host.new(host, hostvars)
+                    Host.new(host, hostvars || {})
+                  when Vagrant::Machine
+                    HostMachine.new(host, hostvars || {})
                   else
-                    HostMachine.new(host, hostvars)
+                    raise Errors::InvalidHostTypeError, type: host.class.name
                   end
       end
 
+      # Assign variables to a group
+      # @param [#to_s] group the name of the group
+      # @param [Hash] new_vars the variables to assign to the group
       def vars_for(group, new_vars = {})
         vars[group.to_s].tap do |group_vars|
           group_vars.merge!(new_vars)
@@ -108,6 +179,9 @@ module VagrantPlugins
         end
       end
 
+      # Assign child groups to a group
+      # @param [#to_s] group the name of the group
+      # @param [Array] new_children the child groups to assign to the group
       def children_of(group, *new_children)
         children[group.to_s].tap do |group_children|
           group_children.merge(new_children.map(&:to_s))
@@ -115,7 +189,12 @@ module VagrantPlugins
         end
       end
 
+      # Perform in-place merge of two {Inventory} instances
+      # @param [Inventory] other the inventory to merge into this one
+      # @return [self] the updated inventory
       def merge!(other)
+        hosts.merge(other.hosts)
+
         @groups = groups.merge(other.groups) do |_group, group_members, other_group_members|
           group_members.merge(other_group_members)
         end
@@ -131,34 +210,70 @@ module VagrantPlugins
         self
       end
 
+      # Merge two {Inventory} instances
+      # @param [Inventory] other the inventory to merge into this one
+      # @return [Inventory] the updated inventory
       def merge(other)
+        # TODO: is shallow clone acceptable?
         clone.merge!(other)
       end
 
+      # @return [Hash{String=>Hash}] the merged hostvars for all hosts in the
+      #   inventory
       def hostvars
-        hosts.each_with_object({}) { |host, acc| acc.merge!(host.hostvars) }
+        Hash[hosts.map { |h| [h.name, h.hostvars] }]
       end
 
+      # A representation of an {Inventory} as a +Hash+
+      # @note the hosts in the inventory will be returned as +Hash+es under the
+      #   key {UNNAMED_GROUP}
+      # @return [Hash{String=>Hash,Array}] a +Hash+ containing the hosts in the
+      #   inventory under the {UNNAMED_GROUP} key, groups mapped to their group
+      #   names, variables mapped to +"group:vars"+, and children mapped to
+      #   +"group:children"+
+      # @todo fix return value description
       def to_h
-        {}.tap do |h|
-          h.merge!(Hash[groups.map { |group, members| [group, members.to_a] }])
-          h['_'] = hosts.map(&:to_h)
-          h.merge!(Hash[vars.map { |group, group_vars| ["#{group}:vars", group_vars] }])
-          h.merge!(Hash[children.map { |group, group_children| ["#{group}:children", group_children.to_a] }])
+        Hash.new { |h, k| h[k] = {} }.tap do |h|
+          h[UNNAMED_GROUP] = hosts.map(&:to_h)
+
+          groups.each do |group, group_hosts|
+            h[group]['hosts'] = group_hosts.to_a
+          end
+
+          vars.each do |group, group_vars|
+            h[group]['vars'] = group_vars
+          end
+
+          children.each do |group, group_children|
+            h[group]['children'] = group_children.to_a
+          end
         end
       end
 
-      def to_json
+      # @return [String] the {Inventory} represented as a JSON object in the
+      #   form of a "Dynamic Inventory"
+      # @see http://docs.ansible.com/ansible/intro_dynamic_inventory.html
+      def to_json(*args)
         to_h.tap do |h|
-          h.delete('_')
-          h['_meta'] = hostvars
-        end.to_json
+          h.delete(UNNAMED_GROUP)
+          h['_meta'] = { 'hostvars' => hostvars }
+        end.to_json(*args)
       end
 
+      # Return the {Inventory} as an INI document
+      # @return [String] the inventory in a newline-separated string
       def to_ini
         with_ini_lines.to_a.join("\n")
       end
 
+      # Iterate over the lines of the {Inventory} represented as an INI
+      # document
+      # @overload
+      #   @return [Enumerator] the lines of the INI document
+      # @overload
+      #   @yieldparam [String] each line in the INI document
+      # @see with_ini_lines_hosts
+      # @see with_ini_lines_groups
       def with_ini_lines
         return enum_for(__method__) unless block_given?
 
@@ -167,19 +282,51 @@ module VagrantPlugins
         end
       end
 
+      # Iterate over the hosts in the {Inventory} represented as an INI
+      # document
+      # @overload
+      #   @return [Enumerator] the lines of the INI document
+      # @overload
+      #   @yieldparam [String] each line in the INI document
       def with_ini_lines_hosts
         return enum_for(__method__) unless block_given?
         hosts.each { |host| yield host.to_ini }
       end
 
+      # Iterate over the groups in the {Inventory} represented as an INI
+      # document
+      # @overload
+      #   @return [Enumerator] the lines of the INI document
+      # @overload
+      #   @yieldparam [String] each line in the INI document
       def with_ini_lines_groups
         return enum_for(__method__) unless block_given?
 
-        to_h.tap { |h| h.delete('_') }.each do |group, entries|
+        to_h.tap { |h| h.delete(UNNAMED_GROUP) }.sort.each do |group, entries|
           yield "[#{group}]"
 
-          (entries.is_a?(Hash) ? entries.map { |entry, value| "#{entry}=#{value}" } : entries).each do |entry|
-            yield entry
+          entries.fetch('hosts', []).sort.each { |h| yield h }
+
+          if entries.key? 'children'
+            yield "[#{group}:children]"
+            entries['children'].sort.each { |c| yield c }
+          end
+
+          if entries.key? 'vars'
+            yield "[#{group}:vars]"
+            entries['vars'].sort.each { |k, v| yield "#{k} = #{v}" }
+          end
+        end
+      end
+
+      # A sanity check of the inventory's state
+      # @return [void]
+      # @raise [Errors::GroupMissingChildError] when a group has a child group
+      #   that doesn't exist
+      def validate!
+        children.each do |group, group_children|
+          group_children.each do |child|
+            raise Errors::GroupMissingChildError, group: group, child: child unless groups.key? child
           end
         end
       end

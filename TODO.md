@@ -6,3 +6,11 @@
 - Util::ScopedHashOverride for the key conversions done in Host?
 - Util::HashWithIndifferentAccess for Host?
 - default vaues for arguments to attr_writer methods in `Inventory`
+- Make sure error messages use `channel: :error`
+- Safe method for expansion of remote paths
+
+## I1*8n
+
+- Command line option usage
+- Error message in `command/root.rb` (and any other instances of
+  `@env.ui#method`)

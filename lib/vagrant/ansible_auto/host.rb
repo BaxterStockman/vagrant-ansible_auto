@@ -103,7 +103,6 @@ module VagrantPlugins
         [inventory_hostname, *hostvars.sort.reject { |_, value| value.nil? }.map { |key, value| "#{key}=#{value}" }].join(' ')
       end
 
-      # @todo this might not work right in a multi-machine environment
       # @return [Fixnum] hash key
       def hash
         to_h.hash

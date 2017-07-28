@@ -77,7 +77,6 @@ module VagrantPlugins
 
                     yield_unseen_candidate.call([info[:ip]]) if info.key?(:ip)
                   when :forwarded_port
-                    # TODO: the `:id' restriction might not be right.
                     if info[:protocol] == 'tcp' && info[:id] == 'ssh'
                       yield_unseen_candidate.call([info[:host_ip], info[:host]])
                     end

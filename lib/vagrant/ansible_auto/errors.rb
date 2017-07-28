@@ -24,6 +24,11 @@ module VagrantPlugins
         error_key(:invalid_host_type)
       end
 
+      # Raised when a group name is disallowed
+      class InvalidGroupNameError < InventoryError
+        error_key(:invalid_group_name)
+      end
+
       # Class representing {Command} errors
       class CommandError < Vagrant::Errors::VagrantError
         error_namespace('vagrant.ansible_auto.errors.command')

@@ -25,8 +25,6 @@ module VagrantPlugins
               #   whether the specified port is open on the specified host
               # @return [nil] if hostname or port were not valid, or if Bash is
               #   not available on the target machine
-              # @todo figure out where Bash lives rather than assuming
-              # +/bin/bash+
               def port_open?(machine, host, port, proto = 'tcp')
                 return nil unless machine.communicate.test('bash')
 

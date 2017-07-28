@@ -29,5 +29,6 @@ en:
           missing_group: 'expected group %{group} is missing from the inventory'
           group_missing_child: 'group %{group} defines nonextant child group %{child}'
           invalid_host_type: "cannot add object of type %{type} as inventory host"
+          invalid_group_name: "%{group} is not a valid group name"
         command:
           unrecognized_command: 'unrecognized_command: %{command}'

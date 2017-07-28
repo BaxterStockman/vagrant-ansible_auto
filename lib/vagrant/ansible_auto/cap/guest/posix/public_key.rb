@@ -21,13 +21,12 @@ module VagrantPlugins
                 return unless machine.guest.capability?(:executable_installed?) \
                   && machine.guest.capability(:executable_installed?, 'ssh-keygen')
 
-                # TODO: handle bad status
                 public_key = ''
-                machine.communicate.execute("ssh-keygen -f #{shellescape(path)} -y") do |data_type, data|
+                exit_status = machine.communicate.execute("ssh-keygen -f #{shellescape(path)} -y", error_check: false) do |data_type, data|
                   public_key += data if data_type == :stdout
                 end
 
-                return if public_key.empty?
+                return if public_key.empty? || !exit_status.zero?
 
                 public_key
               end

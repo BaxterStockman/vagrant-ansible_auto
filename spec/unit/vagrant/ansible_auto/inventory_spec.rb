@@ -58,6 +58,15 @@ describe VagrantPlugins::AnsibleAuto::Inventory do
         expect(children['mygroup']).to include('staging', 'qa')
       end
     end
+
+    context 'given an invalid group name' do
+      it 'raises an error' do
+        expect { inventory.add_group('_') }.to raise_error do |error|
+          expect(error).to be_a(VagrantPlugins::AnsibleAuto::InvalidGroupNameError)
+          expect(error.message).to match(/_ is not a valid group name/)
+        end
+      end
+    end
   end
 
   describe '#add_host' do
@@ -146,6 +155,36 @@ describe VagrantPlugins::AnsibleAuto::Inventory do
 
       it 'assigns the provided groups as children of the parent group' do
         expect(inventory.children['foo']).to include(*group_children)
+      end
+    end
+
+    context 'given a colon-separated group name without :vars or :children' do
+      let(:new_groups) do
+        {
+          'bleep'       => %w[ing computer],
+          'bleep:bloop' => %w[er reel]
+        }
+      end
+
+      it 'treats the group heading as a simple group name' do
+        expect(inventory.groups).to include('bleep:bloop')
+      end
+    end
+
+    context 'given a colon-separated group with backslash-escaped :vars or :children' do
+      let(:new_groups) do
+        {
+          'bleep'       => %w[ing computer],
+          'bleep\:vars' => %w[ity lacrosse],
+          'bleep\:children' => %w[of the corn]
+        }
+      end
+
+      it 'treats the group heading as a simple group name' do
+        expect(inventory.groups).to include('bleep\:vars')
+        expect(inventory.groups).to include('bleep\:children')
+        expect(inventory.vars[:bleep]).to be_empty
+        expect(inventory.children[:bleep]).to be_empty
       end
     end
   end

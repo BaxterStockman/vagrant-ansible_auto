@@ -131,7 +131,6 @@ module VagrantPlugins
 
       def configure_keypair!
         # Check whether user already has a private key
-        # TODO ensure key paths are properly expanded
         if !machine.communicate.test("test -r #{control_machine_private_key_path} && test -r #{control_machine_public_key_path}")
           _pub, priv, openssh = Vagrant::Util::Keypair.create
           write_and_chown_and_chmod_remote_file(priv, control_machine_private_key_path)
@@ -143,9 +142,11 @@ module VagrantPlugins
         openssh
       end
 
-      # @todo clean up repeated keyword args
-      def handle_remote_file(to, owner = machine.ssh_info[:username], mode = 0o600)
+      def handle_remote_file(to, opts = {})
+        owner = opts.fetch(:owner) { machine.ssh_info[:username] }
+        mode = opts.fetch(:mode) { 0o600 }
         machine.communicate.tap do |comm|
+          # NOTE create_and_chown_remote_folder is defined in the parent class
           create_and_chown_remote_folder(File.dirname(to))
 
           yield comm, to
@@ -155,17 +156,15 @@ module VagrantPlugins
         end
       end
 
-      def create_and_chown_and_chmod_remote_file(from, to, mode = 0o600)
-        handle_remote_file(to, machine.ssh_info[:username], mode) do |comm, target|
+      def create_and_chown_and_chmod_remote_file(from, to, opts = {})
+        handle_remote_file(to, opts) do |comm, target|
           comm.upload(from, target)
         end
       end
 
-      def write_and_chown_and_chmod_remote_file(contents, to, mode = 0o600)
-        handle_remote_file(to, machine.ssh_info[:username], mode) do |comm, target|
+      def write_and_chown_and_chmod_remote_file(contents, to, opts = {})
+        handle_remote_file(to, opts) do |comm, target|
           contents = contents.strip << "\n"
-
-          target_parent = File.dirname(target)
 
           remote_path = "/tmp/vagrant-temp-asset-#{Time.now.to_i}"
           Tempfile.open('vagrant-temp-asset') do |f|
@@ -177,11 +176,8 @@ module VagrantPlugins
             comm.upload(f.path, remote_path)
           end
 
-          # FIXME: configure perms on parent dir
-          comm.execute <<-EOH.gsub(/^ */, '')
-            mkdir -p #{target_parent}
-            mv #{remote_path} #{target}
-          EOH
+          # Parent directory of target will already exist
+          comm.execute("mv #{remote_path} #{target}")
         end
       end
 

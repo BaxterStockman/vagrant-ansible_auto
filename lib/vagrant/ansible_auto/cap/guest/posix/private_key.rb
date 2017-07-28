@@ -20,7 +20,7 @@ module VagrantPlugins
               # @param [String] bits the bits of entropy.  Takes any value
               #   valid for the +ssh-keygen+ utility's +-b+ option
               # @return [nil] if +ssh-keygen+ is not available on the machine
-              # @todo document return value!
+              # @return [Integer] the exit code of the remote command
               def generate_private_key(machine, path, type = 'rsa', bits = '2048')
                 return unless machine.guest.capability?(:executable_installed?) \
                   && machine.guest.capability(:executable_installed?, 'ssh-keygen')

@@ -27,12 +27,15 @@ module VagrantPlugins
             op.separator ''
             op.separator 'Available options:'
 
-            op.on('-l', '--list', 'List all hosts as JSON') do
+            op.on('--ini', 'List hosts as INI (default)') do
+              operation = :as_ini
+            end
+
+            op.on('--json', 'List all hosts as JSON') do
               operation = :as_json
             end
 
-            # TODO: set up JSON pretty printing of JSON
-            op.on('--pretty', 'Use pretty JSON output') do
+            op.on('--pretty', 'List all hosts as pretty JSON') do
               operation = :as_pretty_json
             end
           end

@@ -15,7 +15,6 @@ module VagrantPlugins
     class Inventory
       include VagrantPlugins::AnsibleAuto::Util::Config
 
-      # @todo protect creation/assignment to this group
       UNNAMED_GROUP = '_'.freeze
 
       # @return [Hash{String=>Set<Host>}] group names mapped to their members
@@ -69,8 +68,8 @@ module VagrantPlugins
         @groups = nil
 
         new_groups.each do |group_heading, entries|
-          # TODO: handle group names with more than one colon/escaped colons
-          group, type = group_heading.to_s.split(':')
+          group, type = parse_group_heading(group_heading)
+
           case type
           when 'vars'
             entries = {} if entries.nil?
@@ -145,6 +144,8 @@ module VagrantPlugins
       # @param [Array] members the hosts to add to the group
       # @return [Set] the members of the added group
       def add_group(group, *members)
+        raise InvalidGroupNameError, group: group if group.to_s == UNNAMED_GROUP
+
         add_complex_group(group, members.pop) if members.last.is_a? Hash
 
         groups[group.to_s].tap do |group_members|
@@ -214,7 +215,6 @@ module VagrantPlugins
       # @param [Inventory] other the inventory to merge into this one
       # @return [Inventory] the updated inventory
       def merge(other)
-        # TODO: is shallow clone acceptable?
         clone.merge!(other)
       end
 
@@ -228,10 +228,10 @@ module VagrantPlugins
       # @note the hosts in the inventory will be returned as +Hash+es under the
       #   key {UNNAMED_GROUP}
       # @return [Hash{String=>Hash,Array}] a +Hash+ containing the hosts in the
-      #   inventory under the {UNNAMED_GROUP} key, groups mapped to their group
-      #   names, variables mapped to +"group:vars"+, and children mapped to
-      #   +"group:children"+
-      # @todo fix return value description
+      #   inventory (coerced to hashes) under the {UNNAMED_GROUP} key, as well
+      #   as each group name mapped to a subhashes with hosts under the key
+      #   +"hosts"+, variables under the key +"vars"+, and children under the
+      #   key +"children"+
       def to_h
         Hash.new { |h, k| h[k] = {} }.tap do |h|
           h[UNNAMED_GROUP] = hosts.map(&:to_h)
@@ -332,6 +332,13 @@ module VagrantPlugins
       end
 
     private
+
+      def parse_group_heading(group_heading)
+        group_elts = group_heading.to_s.split(/(?<!\\):/)
+        type = group_elts.length > 1 && %w[vars children].include?(group_elts.last) ? group_elts.pop.chomp.strip : nil
+        group = group_elts.join(':').chomp.strip
+        [group, type]
+      end
 
       def add_complex_group(group, group_spec = {})
         group_spec = Util::HashWithIndifferentAccess.new(group_spec)

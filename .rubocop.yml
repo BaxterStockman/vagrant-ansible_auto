@@ -4,6 +4,7 @@
 AllCops:
   Exclude:
     - 'Vagrantfile*'
+    - 'vendor/**/*'
     - !ruby/regexp '/\\A(?!(?:lib|spec)\\/)/'
 
 Style/FileName:

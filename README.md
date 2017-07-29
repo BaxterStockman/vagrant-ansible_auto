@@ -66,6 +66,9 @@ control
 worker
 ```
 
+You can print the inventory as compact JSON by providing the `--json` flag or
+as pretty JSON by providing the `--pretty` flag.
+
 ### Provisioning
 
 The `ansible_auto` provisioner is an augmented version of the
@@ -81,7 +84,7 @@ Vagrant.configure(2) do |config|
       #   [control]
       #   ansible-control
       ansible.groups = {
-        'control'   => %(ansible-control)
+        'control'   => %w(ansible-control)
       }
 
       # Will show up in inventory as
@@ -100,7 +103,7 @@ Vagrant.configure(2) do |config|
         }
       }
 
-      # Enable or disable `StrictHostKeyChecking` SSH option.
+      # Enable or disable the `StrictHostKeyChecking` SSH option.
       # Disabled by default.
       ansible.strict_host_key_checking = false
 
@@ -110,17 +113,49 @@ Vagrant.configure(2) do |config|
 
       # The number of seconds to delay between connection attempts.
       ansible.host_connect_sleep = 5
+
+      # When true, insert the public key of the SSH user for the control
+      # machine (the machine that will run `ansible-playbook`) into the
+      # authorized_keys files of the SSH users on managed machines.  Enabled by
+      # default.
+      ansible.insert_control_machine_public_key = false
+
+      # When true, upload the private keys for the SSH users of managed
+      # machines to a temporary location on the control machine, using these
+      # keys as the values of `ansible_ssh_private_key_file` in the generated
+      # inventory.  Disabled by default, unless
+      # `insert_control_machine_public_key` is disabled.
+      ansible.upload_inventory_host_private_keys = true
     end
   end
 end
 ```
 
+#### Public Key Authentication
+
 Each guest provisioned with `ansible_auto` will be set up as an Ansible
 control machine with the ability to connect to other guests defined in the
-`Vagrantfile`.  This is facilitated by uploading the private keys of each guest
-to a temporary path on the control machine and assigning this path as the
-hostvar `ansible_ssh_private_key_file` to the relevant host in the generated
-inventory.
+`Vagrantfile`.  This is facilitated by either:
+
+- Inserting the public key of the control machine's SSH user into the
+  `authorized_keys` file of the SSH user on each of the managed machines (other
+  than the control machine itself).  This is what happens when the option
+  `insert_control_machine_public_key` is in effect.
+- Uploading the private keys of each guest to a temporary path on the control
+  machine and assigning this path as the hostvar `ansible_ssh_private_key_file`
+  to the relevant host in the generated inventory.  This is what happens when
+  the option `upload_inventory_host_private_keys` is in effect.
+
+`insert_control_machine_public_key` takes precedence over
+`upload_inventory_host_private_keys`, so public key insertion will be used if
+both options are set to `true`.
+
+#### Targeted Machines
+
+By default, the `ansible_auto` provisioner targets all machines defined in the
+inventory by setting the provisioner option `ansible.limit` to `"*"`.  This is
+different than the core `ansible_local` provisioner, which by default targets
+only the guest for which the provisioner was defined.
 
 ## Contributing
 

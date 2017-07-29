@@ -2,6 +2,6 @@
 
 module VagrantPlugins
   module AnsibleAuto
-    VERSION = '0.1.5'.freeze
+    VERSION = '0.2.0'.freeze
   end
 end

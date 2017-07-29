@@ -1,5 +1,11 @@
 # Vagrant::AnsibleAuto
 
+[![Build Status](https://secure.travis-ci.org/BaxterStockman/vagrant-ansible_auto.png?branch=master)](https://travis-ci.org/BaxterStockman/vagrant-ansible_auto)
+[![Dependency Status](https://gemnasium.com/BaxterStockman/vagrant-ansible_auto.png)](https://gemnasium.com/BaxterStockman/vagrant-ansible_auto)
+[![Code Climate](https://codeclimate.com/github/BaxterStockman/vagrant-ansible_auto.png)](https://codeclimate.com/github/BaxterStockman/vagrant-ansible_auto)
+[![Coverage Status](https://coveralls.io/repos/BaxterStockman/vagrant-ansible_auto/badge.png?branch=master)](https://coveralls.io/r/BaxterStockman/vagrant-ansible_auto)
+[![Gem Version](https://img.shields.io/gem/v/vagrant-ansible_auto.svg)](https://rubygems.org/gems/vagrant-ansible_auto)
+
 This Vagrant plugin provides the `ansible_auto` provisioner that automatically
 sets up the provisioned guest as an Ansible control machine for the nodes
 defined in your Vagrantfile.  It also provides the `vagrant ansible` subcommand

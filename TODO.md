@@ -8,6 +8,12 @@
 - default vaues for arguments to attr_writer methods in `Inventory`
 - Make sure error messages use `channel: :error`
 - Safe method for expansion of remote paths
+- Check that the version of Ansible on the control machine supports the `local`
+  connection type
+- (Optionally) remove inventory host private keys from the control machine
+  after `ansible-playbook` runs
+- Delegate config methods `groups=`, `children=`, and `vars=` to the
+  `inventory` instance variable (for auto-vivification of the various hashes)
 
 ## I1*8n
 

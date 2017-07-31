@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+load 'vagrant/ansible_auto.rb'
+
 # Namespace for Vagrant plugins
 module VagrantPlugins
   # Namespace for the +ansible_auto+ provisioner and +ansible+ command
@@ -12,6 +14,15 @@ module VagrantPlugins
       Automatically generate Ansible inventories for use when running Ansible
       on guest machines
       DESC
+
+      def self.init!
+        require 'i18n'
+
+        VagrantPlugins::AnsibleAuto.source_root.join('locales/en.yml').tap do |en|
+          I18n.load_path << en unless I18n.load_path.include? en
+          I18n.reload!
+        end
+      end
 
       config 'ansible' do
         require_relative 'config'
@@ -80,9 +91,7 @@ module VagrantPlugins
       end
 
       action_hook 'environment_plugins_loaded' do
-        require 'i18n'
-        I18n.load_path << VagrantPlugins::AnsibleAuto.source_root.join('locales/en.yml')
-        I18n.reload!
+        init!
       end
     end
   end

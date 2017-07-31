@@ -1,6 +1,7 @@
 GIT
   remote: git://github.com/mitchellh/vagrant-spec.git
   revision: 2f0fb10862b2d19861c584be9d728080ba1f5d33
+  ref: 2f0fb10
   specs:
     vagrant-spec (0.0.1)
       childprocess (~> 0.6.0)
@@ -10,7 +11,7 @@ GIT
 
 GIT
   remote: git://github.com/mitchellh/vagrant.git
-  revision: a7b228eb698352638270dc076d0385fa324ca187
+  revision: d014cdac65345814e568d0d4fd98b7b6d61a8f67
   specs:
     vagrant (1.9.8.dev)
       childprocess (~> 0.6.0)
@@ -120,11 +121,11 @@ GEM
     ruby_dep (1.3.1)
     rubyntlm (0.6.2)
     rubyzip (1.2.1)
-    simplecov (0.14.1)
+    simplecov (0.15.0)
       docile (~> 1.1.0)
       json (>= 1.8, < 3)
       simplecov-html (~> 0.10.0)
-    simplecov-html (0.10.1)
+    simplecov-html (0.10.2)
     slop (3.6.0)
     term-ansicolor (1.2.2)
       tins (~> 0.8)

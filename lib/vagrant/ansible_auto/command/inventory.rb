@@ -9,7 +9,7 @@ module VagrantPlugins
       class Inventory < Vagrant.plugin(2, :command)
         # @return [String] summary of the +ansible inventory+ command
         def self.synopsis
-          'dynamic ansible inventory'
+          I18n.t('vagrant.ansible_auto.command.inventory.synopsis')
         end
 
         # Print the Ansible inventory for the current Vagrantfile.
@@ -23,26 +23,26 @@ module VagrantPlugins
           operation = :as_ini
 
           opts = OptionParser.new do |op|
-            op.banner = 'Usage: vagrant ansible inventory [<options>]'
+            op.banner = I18n.t('vagrant.ansible_auto.command.inventory.usage')
             op.separator ''
-            op.separator 'Available options:'
+            op.separator I18n.t('vagrant.ansible_auto.command.inventory.available_options')
 
-            op.on('--ini', 'List hosts as INI (default)') do
+            op.on('--ini', I18n.t('vagrant.ansible_auto.command.inventory.option.ini')) do
               operation = :as_ini
             end
 
-            op.on('--json', 'List all hosts as JSON') do
+            op.on('--json', I18n.t('vagrant.ansible_auto.command.inventory.option.json')) do
               operation = :as_json
             end
 
-            op.on('--pretty', 'List all hosts as pretty JSON') do
+            op.on('--pretty', I18n.t('vagrant.ansible_auto.command.inventory.option.pretty')) do
               operation = :as_pretty_json
             end
           end
 
           machines = parse_options(opts)
 
-          @env.ui.info send(operation, machines), prefix: false
+          @env.ui.info send(operation, machines), prefix: false unless machines.nil?
 
           0
         end
@@ -64,8 +64,9 @@ module VagrantPlugins
         def build_inventory(machines)
           with_target_vms(machines) {}.each_with_object(AnsibleAuto::Inventory.new) do |machine, inventory|
             unless machine.state.id == :running
-              @env.ui.warn "machine #{machine.name} is not running; falling back to default hostvar values", channel: :error
+              @env.ui.warn I18n.t('vagrant.ansible_auto.command.inventory.diag.not_running', machine_name: machine.name), channel: :error
             end
+
             inventory.merge!(machine.config.ansible.inventory)
             inventory.add_host(machine)
           end

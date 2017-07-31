@@ -2,12 +2,29 @@
 
 require 'pathname'
 
+type = if File.basename($PROGRAM_NAME) == 'vagrant-spec'
+         'acceptance'
+       else
+         'unit'
+       end
+
+RSpec.configure do |config|
+  config.pattern = "#{type}/**/*_spec.rb"
+  config.color = true
+  config.formatter = 'documentation'
+  config.order = 'rand'
+end
+
 Pathname.new(__FILE__).tap do |helper|
   $LOAD_PATH.unshift((helper.parent.parent + 'lib').to_s)
 
   require 'vagrant/ansible_auto'
 
-  helper.parent.join('support').find { |f| require f if f.extname == '.rb' }
+  if (support_dir = helper.parent.join('support', type)).directory?
+    support_dir.find { |f| require f if f.extname == '.rb' }
+  end
 end
 
-SimpleCov.start
+if type == 'unit'
+  SimpleCov.start unless SimpleCov.running
+end

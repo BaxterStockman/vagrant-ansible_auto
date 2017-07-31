@@ -39,11 +39,10 @@ describe VagrantPlugins::AnsibleAuto::Config do
 
     context 'given an error constructing the inventory' do
       it 'catches the error and returns it under the "ansible_auto" key' do
-        pending 'at the moment, the inventory object does not raise any errors along the relevant code paths' do
-          config.finalize!
-          errors = config.validate(machine)
-          expect(errors['ansible_auto']).not_to be_empty
-        end
+        pending 'at the moment, the inventory object does not raise any errors along the relevant code paths'
+        config.finalize!
+        errors = config.validate(machine)
+        expect(errors['ansible_auto']).not_to be_empty
       end
     end
 

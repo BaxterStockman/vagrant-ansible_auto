@@ -72,6 +72,12 @@ shared_context 'machine' do |machine_count = 2|
   let(:ui) { machine.ui }
   let(:communicator) { machine.communicator }
   let(:playbook) { 'playbook.yml' }
+
+  before do |example|
+    # Ensure that we always create the Vagrant::Environment, unless explicitly
+    # told not to
+    iso_env unless example.metadata.fetch(:skip_create_vagrant_env) { false }
+  end
 end
 
 shared_context 'host' do

@@ -13,7 +13,7 @@ module VagrantPlugins
       class Root < Vagrant.plugin(2, :command)
         # @return [String] summary of the +ansible+ command
         def self.synopsis
-          'build ansible inventory'
+          I18n.t('vagrant.ansible_auto.command.root.synopsis')
         end
 
         # Execute the +ansible+ command
@@ -34,17 +34,17 @@ module VagrantPlugins
       private
 
         def prepare_options
-          OptionParser.new do |o|
-            o.banner = 'Usage: vagrant ansible <subcommand> [<options>]'
-            o.separator ''
-            o.separator 'Available subcommands:'
+          OptionParser.new do |op|
+            op.banner = I18n.t('vagrant.ansible_auto.command.root.usage')
+            op.separator ''
+            op.separator I18n.t('vagrant.ansible_auto.command.root.available_subcommands')
 
             subcommands.keys.sort.each do |k|
-              o.separator "    #{k}"
+              op.separator "    #{k}"
             end
 
-            o.separator ''
-            o.separator 'For help on any individual subcommand run `vagrant ansible <subcommand> -h`'
+            op.separator ''
+            op.separator I18n.t('vagrant.ansible_auto.command.root.subcommand_help')
           end
         end
 

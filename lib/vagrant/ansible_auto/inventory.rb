@@ -144,7 +144,7 @@ module VagrantPlugins
       # @param [Array] members the hosts to add to the group
       # @return [Set] the members of the added group
       def add_group(group, *members)
-        raise InvalidGroupNameError, group: group if group.to_s == UNNAMED_GROUP
+        raise Errors::InvalidGroupNameError, group: group if group.to_s == UNNAMED_GROUP
 
         add_complex_group(group, members.pop) if members.last.is_a? Hash
 

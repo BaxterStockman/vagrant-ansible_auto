@@ -50,7 +50,7 @@ describe VagrantPlugins::AnsibleAuto::Inventory do
 
       inventory.vars.tap do |vars|
         expect(vars).to have_key('mygroup')
-        expect(vars['mygroup']).to include(this: 'n', uh: 'that', n: 'uh')
+        expect(vars['mygroup']).to include('this' => 'n', 'uh' => 'that', 'n' => 'uh')
       end
 
       inventory.children.tap do |children|
@@ -62,7 +62,7 @@ describe VagrantPlugins::AnsibleAuto::Inventory do
     context 'given an invalid group name' do
       it 'raises an error' do
         expect { inventory.add_group('_') }.to raise_error do |error|
-          expect(error).to be_a(VagrantPlugins::AnsibleAuto::InvalidGroupNameError)
+          expect(error).to be_a(VagrantPlugins::AnsibleAuto::Errors::InvalidGroupNameError)
           expect(error.message).to match(/_ is not a valid group name/)
         end
       end

@@ -15,15 +15,21 @@ en:
       command:
         root:
           synopsis: 'build an Ansible inventory'
+          usage: 'Usage: vagrant ansible <subcommand> [<args>]'
+          available_subcommands: 'Available subcommands:'
+          subcommand_help: 'For help on any individual subcommand run `vagrant ansible SUBCOMMAND -h`'
           option: {}
           diag: {}
-        skel:
+        inventory:
           synopsis: 'output a dynamic Ansible inventory'
           usage: 'Usage: vagrant ansible inventory [options]'
+          available_options: 'Available options:'
           option:
-            list: 'List all hosts as JSON'
+            ini: 'List all hosts as INI'
+            json: 'List all hosts as terse JSON'
+            pretty: 'List all hosts as pretty JSON'
           diag:
-            not_running: 'machine %{machine} is not running; falling back to default hostvar values'
+            not_running: 'machine %{machine_name} is not running; falling back to default hostvar values'
       errors:
         inventory:
           missing_group: 'expected group %{group} is missing from the inventory'

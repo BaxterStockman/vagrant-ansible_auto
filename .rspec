@@ -1,0 +1,3 @@
+# Ensure that spec_helper.rb is loaded first so that +RSpec.configure+ custom
+# settings will take effect before loading test files.
+--require 'spec_helper'

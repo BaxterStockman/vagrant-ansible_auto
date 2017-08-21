@@ -11,7 +11,7 @@ GIT
 
 GIT
   remote: git://github.com/mitchellh/vagrant.git
-  revision: d014cdac65345814e568d0d4fd98b7b6d61a8f67
+  revision: dce71a5a27c93d97c9262e7562c0fd5abfc2fd9a
   specs:
     vagrant (1.9.8.dev)
       childprocess (~> 0.6.0)
@@ -34,7 +34,7 @@ GIT
 PATH
   remote: .
   specs:
-    vagrant-ansible_auto (0.2.1)
+    vagrant-ansible_auto (0.2.2)
 
 GEM
   remote: https://rubygems.org/

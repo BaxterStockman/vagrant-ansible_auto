@@ -6,6 +6,15 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
+## 0.2.2 (August 23, 2017)
+
+BUG FIXES:
+
+- `vagrant ansible inventory --help` no longer prints an inventory after the
+  help text
+- `vagrant ansible --help` shows available subcommands rather than an `I18n`
+  "translation missing" error message
+
 ## 0.2.1 (July 29, 2017)
 
 BUG FIXES:

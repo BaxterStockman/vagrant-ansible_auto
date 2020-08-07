@@ -4,8 +4,15 @@ FEATURES:
 
 IMPROVEMENTS:
 
+- Update development dependencies, including updating to the current stable
+  Vagrant release (2.2.9).
+
 BUG FIXES:
 
+- Disable Vagrant plugin loading and plugin system initialization when running
+  unit tests; this isolates our tests from the user's existing Vagrant
+  environment (e.g. the stuff undef `~/.vagrant.d`) and help avert breakage due
+  to problems with globally-installed Vagrant plugins.
 - Add missing `require "simplecov"` to [`spec/spec_helper.rb`], correcting a
   fatal `NameError` referring to `SimpleCov`.
 

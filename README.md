@@ -1,9 +1,8 @@
 # Vagrant::AnsibleAuto
 
-[![Build Status](https://secure.travis-ci.org/BaxterStockman/vagrant-ansible_auto.png?branch=master)](https://travis-ci.org/BaxterStockman/vagrant-ansible_auto)
-[![Dependency Status](https://gemnasium.com/BaxterStockman/vagrant-ansible_auto.png)](https://gemnasium.com/BaxterStockman/vagrant-ansible_auto)
-[![Code Climate](https://codeclimate.com/github/BaxterStockman/vagrant-ansible_auto.png)](https://codeclimate.com/github/BaxterStockman/vagrant-ansible_auto)
-[![Coverage Status](https://coveralls.io/repos/github/BaxterStockman/vagrant-ansible_auto/badge.svg?branch=travis)](https://coveralls.io/github/BaxterStockman/vagrant-ansible_auto?branch=travis)
+[![Build Status](https://secure.travis-ci.org/tomeon/vagrant-ansible_auto.png?branch=master)](https://travis-ci.org/tomeon/vagrant-ansible_auto)
+[![Code Climate](https://codeclimate.com/github/tomeon/vagrant-ansible_auto.png)](https://codeclimate.com/github/tomeon/vagrant-ansible_auto)
+[![Coverage Status](https://coveralls.io/repos/github/tomeon/vagrant-ansible_auto/badge.svg?branch=travis)](https://coveralls.io/github/tomeon/vagrant-ansible_auto?branch=travis)
 [![Gem Version](https://img.shields.io/gem/v/vagrant-ansible_auto.svg)](https://rubygems.org/gems/vagrant-ansible_auto)
 
 This Vagrant plugin provides the `ansible_auto` provisioner that automatically
@@ -159,7 +158,7 @@ only the guest for which the provisioner was defined.
 
 ## Contributing
 
-1. Fork it ( https://github.com/BaxterStockman/vagrant-ansible_auto/fork )
+1. Fork it ( https://github.com/tomeon/vagrant-ansible_auto/fork )
 2. Create your feature branch (`git checkout -b my-new-feature`)
 3. Commit your changes (`git commit -am 'Add some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)

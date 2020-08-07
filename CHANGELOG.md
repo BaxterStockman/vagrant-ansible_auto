@@ -6,6 +6,14 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
+## 0.2.4 (August 07, 2020)
+
+FEATURES:
+
+IMPROVEMENTS:
+
+BUG FIXES:
+
 - `s/chmod/chown/` in
   `VagrantPlugins::AnsibleAuto::Provisioner#create_and_chown_remote_folder`.
   This corrects a fatal error due to the fact that `chmod` does not recognize

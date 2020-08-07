@@ -39,7 +39,7 @@ GIT
 PATH
   remote: .
   specs:
-    vagrant-ansible_auto (0.2.3)
+    vagrant-ansible_auto (0.2.4)
 
 GEM
   remote: https://rubygems.org/

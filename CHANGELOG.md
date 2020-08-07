@@ -6,7 +6,15 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
+- `s/chmod/chown/` in
+  `VagrantPlugins::AnsibleAuto::Provisioner#create_and_chown_remote_folder`.
+  This corrects a fatal error due to the fact that `chmod` does not recognize
+  the `-h` flag (and, even it it did recognize the flag, it wouldn't DWIM).
+
 ## 0.2.3 (August 07, 2020)
+
+**NOTE** yanked due to use of `chmod` rather than `chown` in
+`VagrantPlugins::AnsibleAuto::Provisioner#create_and_chown_remote_folder`.
 
 IMPROVEMENTS:
 

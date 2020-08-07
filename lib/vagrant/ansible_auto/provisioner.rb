@@ -156,6 +156,16 @@ module VagrantPlugins
         end
       end
 
+      # This method used to be defined on
+      # VagrantPlugins::Ansible::Provisioner::Guest, but was removed:
+      # @see https://github.com/hashicorp/vagrant/commit/0d23724a1fcf87e1ab86be85e15516eca9e32e8d
+      def create_and_chown_remote_folder(path)
+        machine.communicate.tap do |comm|
+          comm.sudo("mkdir -p #{path}")
+          comm.sudo("chmod -h #{machine.ssh_info[:username]} #{path}")
+        end
+      end
+
       def create_and_chown_and_chmod_remote_file(from, to, opts = {})
         handle_remote_file(to, opts) do |comm, target|
           comm.upload(from, target)

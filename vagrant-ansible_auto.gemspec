@@ -23,12 +23,12 @@ Gem::Specification.new do |spec|
   spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }
   spec.require_paths = ['lib']
 
-  spec.add_development_dependency 'bundler',      '~> 1.12.5'
-  spec.add_development_dependency 'rake',         '~> 10.0'
-  spec.add_development_dependency 'rspec',        '~> 2.14'
-  spec.add_development_dependency 'simplecov'
-  spec.add_development_dependency 'rubocop'
+  spec.add_development_dependency 'bundler', '~> 2.1.0'
   spec.add_development_dependency 'cane'
   spec.add_development_dependency 'coveralls'
+  spec.add_development_dependency 'rake', '~> 10.0'
+  spec.add_development_dependency 'rspec', '~> 2.14'
+  spec.add_development_dependency 'rubocop', '~> 0.50.0'
+  spec.add_development_dependency 'simplecov'
   spec.add_development_dependency 'yard'
 end

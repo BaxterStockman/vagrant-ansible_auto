@@ -6,6 +6,9 @@ IMPROVEMENTS:
 
 BUG FIXES:
 
+- Add missing `require "simplecov"` to [`spec/spec_helper.rb`], correcting a
+  fatal `NameError` referring to `SimpleCov`.
+
 ## 0.2.2 (August 23, 2017)
 
 BUG FIXES:

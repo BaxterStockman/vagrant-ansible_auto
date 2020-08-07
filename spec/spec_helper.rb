@@ -26,5 +26,6 @@ Pathname.new(__FILE__).tap do |helper|
 end
 
 if type == 'unit'
+  require 'simplecov'
   SimpleCov.start unless SimpleCov.running
 end

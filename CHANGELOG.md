@@ -4,6 +4,12 @@ FEATURES:
 
 IMPROVEMENTS:
 
+BUG FIXES:
+
+## 0.2.3 (August 07, 2020)
+
+IMPROVEMENTS:
+
 - Update development dependencies, including updating to the current stable
   Vagrant release (2.2.9).
 

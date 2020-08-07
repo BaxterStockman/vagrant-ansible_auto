@@ -26,6 +26,9 @@ Pathname.new(__FILE__).tap do |helper|
 end
 
 if type == 'unit'
+  ENV['VAGRANT_DISABLE_PLUGIN_INIT'] = 'yes'
+  ENV['VAGRANT_NO_PLUGINS'] = 'yes'
+
   require 'simplecov'
   SimpleCov.start unless SimpleCov.running
 end
